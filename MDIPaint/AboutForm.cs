@@ -101,5 +101,10 @@ namespace MDIPaint
             }
         }
         #endregion
+
+        private void AboutForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
