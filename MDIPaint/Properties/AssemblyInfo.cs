@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("MDIPaint")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Многооконный графический редактор с поддержкой MDI (Multiple Document Interface). Позволяет создавать и редактировать изображения.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Александр Богомаз")]
 [assembly: AssemblyProduct("MDIPaint")]
-[assembly: AssemblyCopyright("Copyright ©  2026")]
+[assembly: AssemblyCopyright("Copyright © 2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
