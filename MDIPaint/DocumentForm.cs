@@ -20,6 +20,7 @@ namespace MDIPaint
         public bool IsDirty { get; private set; } = false;     // был ли изменён рисунок
         private int x, y;
         private Bitmap bitmap;
+        private Point? startPoint = null;
         public Bitmap Image => bitmap;
         public DocumentForm()
         {
@@ -134,12 +135,14 @@ namespace MDIPaint
 
         private void DocumentForm_MouseUp(object sender, MouseEventArgs e)
         {
-            Graphics g = Graphics.FromImage(bitmap);
+            if (e.Button == MouseButtons.Left)
+            {
+                Graphics g = Graphics.FromImage(bitmap);
             g.DrawLine(new Pen(MainForm.Color, MainForm.Width), x, y, e.X, e.Y);
             x = e.X;
             y = e.Y;
             Invalidate();
-        }
+        }}
 
         private void DocumentForm_MouseMove(object sender, MouseEventArgs e)
         {
