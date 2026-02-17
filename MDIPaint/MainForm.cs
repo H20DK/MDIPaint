@@ -151,7 +151,6 @@ namespace MDIPaint
 
         private void упорядочитьЗначкиToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // не робит
             LayoutMdi(MdiLayout.ArrangeIcons);
         }
 
