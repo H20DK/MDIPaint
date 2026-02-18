@@ -18,13 +18,21 @@ namespace MDIPaint
     {
         public string FilePath { get; private set; } = null;   // null = новый документ
         public bool IsDirty { get; private set; } = false;     // был ли изменён рисунок
+        private Point? startPoint = null;          // начало линии (null = не рисуем)
+        private Point currentPos = Point.Empty;    // текущая позиция мыши во время перетаскивания
         private int x, y;
         private Bitmap bitmap;
-        private Point? startPoint = null;
         public Bitmap Image => bitmap;
         public DocumentForm()
         {
             InitializeComponent();
+            bitmap = new Bitmap(300, 200);
+            this.DoubleBuffered = true;
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer |
+                          ControlStyles.AllPaintingInWmPaint |
+                          ControlStyles.UserPaint, true);
+            this.UpdateStyles();
+
             bitmap = new Bitmap(300, 200);
             using (Graphics g = Graphics.FromImage(bitmap))
             {
@@ -129,32 +137,63 @@ namespace MDIPaint
 
         private void DocumentForm_MouseDown(object sender, MouseEventArgs e)
         {
-            x = e.X;
-            y = e.Y;
+            if (e.Button != MouseButtons.Left) return;
+
+            var main = MdiParent as MainForm;
+            if (main == null) return;
+
+            if (main.Tool == Tools.Line)
+            {
+                startPoint = e.Location;
+                currentPos = e.Location;
+            }
+            else if (main.Tool == Tools.Pencil)
+            {
+                x = e.X;
+                y = e.Y;
+            }
+
+            IsDirty = true;
         }
 
         private void DocumentForm_MouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button != MouseButtons.Left) return;
+
+            var main = MdiParent as MainForm;
+            if (main == null || !startPoint.HasValue) return;
+
+            using (var g = Graphics.FromImage(bitmap))
             {
-                Graphics g = Graphics.FromImage(bitmap);
-            g.DrawLine(new Pen(MainForm.Color, MainForm.Width), x, y, e.X, e.Y);
-            x = e.X;
-            y = e.Y;
+                if (main.Tool == Tools.Line)
+                {
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.DrawLine(new Pen(MainForm.Color, MainForm.Width),
+                               startPoint.Value, currentPos);
+                    IsDirty = true;
+                }
+                // Pencil уже нарисован в MouseMove
+            }
+
             Invalidate();
-        }}
+            startPoint = null;
+        }
 
         private void DocumentForm_MouseMove(object sender, MouseEventArgs e)
         {
-            var mainForm = this.ParentForm as MainForm;
-            var currentTool = mainForm.Tool;
-            switch (currentTool)
+            var main = MdiParent as MainForm;
+            if (main == null) return;
+
+            currentPos = e.Location;   // всегда запоминаем, куда указывает мышь
+
+            if (e.Button != MouseButtons.Left) return;
+            switch (main.Tool)
             {
                 case Tools.Pencil:
                     DrawPencil(e);
                     break;
                 case Tools.Line:
-                    DrawLine(e);
+                    Invalidate();
                     break;
                 default : 
                     throw new NotImplementedException();
@@ -164,14 +203,14 @@ namespace MDIPaint
 
         private void DrawPencil(MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (startPoint.HasValue)   // startPoint используем как предыдущую точку
             {
                 Graphics g = Graphics.FromImage(bitmap);
-                g.DrawLine(new Pen(MainForm.Color, MainForm.Width), x, y, e.X, e.Y);
-                Invalidate();
-                x = e.X;
-                y = e.Y;
+                g.DrawLine(new Pen(MainForm.Color, MainForm.Width), startPoint.Value, e.Location);
             }
+            startPoint = e.Location;
+            IsDirty = true;
+            Invalidate();
         }
 
         private void DrawLine(MouseEventArgs e)
@@ -188,7 +227,25 @@ namespace MDIPaint
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            e.Graphics.DrawImage(bitmap, 0, 0);
+
+            // Сначала рисуем постоянное изображение
+            if (bitmap != null)
+                e.Graphics.DrawImage(bitmap, 0, 0);
+
+            // Если тянем линию — рисуем временную "резинку"
+            var main = MdiParent as MainForm;
+            if (main != null &&
+                main.Tool == Tools.Line &&
+                startPoint.HasValue &&
+                (MouseButtons & MouseButtons.Left) == MouseButtons.Left)
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                using (var pen = new Pen(MainForm.Color, MainForm.Width))
+                {
+                    // pen.DashStyle = DashStyle.Dash;   // ← можно сделать пунктирной для красоты
+                    e.Graphics.DrawLine(pen, startPoint.Value, currentPos);
+                }
+            }
         }
 
 
