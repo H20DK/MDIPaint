@@ -58,6 +58,16 @@
             this.brushSizeTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.pencilBtn = new System.Windows.Forms.ToolStripButton();
             this.lineBtn = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.ellipseBtn = new System.Windows.Forms.ToolStripButton();
+            this.eraserBtn = new System.Windows.Forms.ToolStripButton();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.textBtn = new System.Windows.Forms.ToolStripButton();
+            this.bucketBtn = new System.Windows.Forms.ToolStripButton();
+            this.arrowBtn = new System.Windows.Forms.ToolStripButton();
+            this.zoomInBtn = new System.Windows.Forms.ToolStripButton();
+            this.zoomOutBtn = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -223,7 +233,16 @@
             this.toolStripLabel1,
             this.brushSizeTextBox,
             this.pencilBtn,
-            this.lineBtn});
+            this.eraserBtn,
+            this.textBtn,
+            this.bucketBtn,
+            this.toolStripSeparator4,
+            this.lineBtn,
+            this.ellipseBtn,
+            this.arrowBtn,
+            this.toolStripSeparator5,
+            this.zoomInBtn,
+            this.zoomOutBtn});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(800, 25);
@@ -314,11 +333,98 @@
             this.lineBtn.Text = "Линия";
             this.lineBtn.Click += new System.EventHandler(this.lineBtn_Click);
             // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
+            // 
+            // ellipseBtn
+            // 
+            this.ellipseBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.ellipseBtn.Image = ((System.Drawing.Image)(resources.GetObject("ellipseBtn.Image")));
+            this.ellipseBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ellipseBtn.Name = "ellipseBtn";
+            this.ellipseBtn.Size = new System.Drawing.Size(23, 22);
+            this.ellipseBtn.Text = "Эллипс";
+            this.ellipseBtn.Click += new System.EventHandler(this.ellipseBtn_Click);
+            // 
+            // eraserBtn
+            // 
+            this.eraserBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.eraserBtn.Image = ((System.Drawing.Image)(resources.GetObject("eraserBtn.Image")));
+            this.eraserBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.eraserBtn.Name = "eraserBtn";
+            this.eraserBtn.Size = new System.Drawing.Size(23, 22);
+            this.eraserBtn.Text = "Ластик";
+            this.eraserBtn.Click += new System.EventHandler(this.eraserBtn_Click);
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(654, 27);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(134, 17);
+            this.checkBox1.TabIndex = 5;
+            this.checkBox1.Text = "Закрашенная фигура";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
+            // textBtn
+            // 
+            this.textBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.textBtn.Image = ((System.Drawing.Image)(resources.GetObject("textBtn.Image")));
+            this.textBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.textBtn.Name = "textBtn";
+            this.textBtn.Size = new System.Drawing.Size(23, 22);
+            this.textBtn.Text = "Текст";
+            // 
+            // bucketBtn
+            // 
+            this.bucketBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.bucketBtn.Image = ((System.Drawing.Image)(resources.GetObject("bucketBtn.Image")));
+            this.bucketBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.bucketBtn.Name = "bucketBtn";
+            this.bucketBtn.Size = new System.Drawing.Size(23, 22);
+            this.bucketBtn.Text = "Заливка";
+            // 
+            // arrowBtn
+            // 
+            this.arrowBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.arrowBtn.Image = ((System.Drawing.Image)(resources.GetObject("arrowBtn.Image")));
+            this.arrowBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.arrowBtn.Name = "arrowBtn";
+            this.arrowBtn.Size = new System.Drawing.Size(23, 22);
+            this.arrowBtn.Text = "Стрелка";
+            // 
+            // zoomInBtn
+            // 
+            this.zoomInBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.zoomInBtn.Image = ((System.Drawing.Image)(resources.GetObject("zoomInBtn.Image")));
+            this.zoomInBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.zoomInBtn.Name = "zoomInBtn";
+            this.zoomInBtn.Size = new System.Drawing.Size(23, 22);
+            this.zoomInBtn.Text = "Уменьшить";
+            // 
+            // zoomOutBtn
+            // 
+            this.zoomOutBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.zoomOutBtn.Image = ((System.Drawing.Image)(resources.GetObject("zoomOutBtn.Image")));
+            this.zoomOutBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.zoomOutBtn.Name = "zoomOutBtn";
+            this.zoomOutBtn.Size = new System.Drawing.Size(23, 22);
+            this.zoomOutBtn.Text = "Увеличить";
+            // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 25);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.menuStrip1);
             this.DoubleBuffered = true;
@@ -367,6 +473,16 @@
         private System.Windows.Forms.ToolStripTextBox brushSizeTextBox;
         private System.Windows.Forms.ToolStripButton pencilBtn;
         private System.Windows.Forms.ToolStripButton lineBtn;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.ToolStripButton ellipseBtn;
+        private System.Windows.Forms.ToolStripButton eraserBtn;
+        private System.Windows.Forms.ToolStripButton textBtn;
+        private System.Windows.Forms.ToolStripButton bucketBtn;
+        private System.Windows.Forms.ToolStripButton arrowBtn;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+        private System.Windows.Forms.ToolStripButton zoomInBtn;
+        private System.Windows.Forms.ToolStripButton zoomOutBtn;
     }
 }
 

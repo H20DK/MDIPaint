@@ -16,17 +16,29 @@ namespace MDIPaint
 {
     public partial class DocumentForm : Form
     {
-        public string FilePath { get; private set; } = null;   // null = новый документ
-        public bool IsDirty { get; private set; } = false;     // был ли изменён рисунок
-        private Point? startPoint = null;          // начало линии (null = не рисуем)
-        private Point currentPos = Point.Empty;    // текущая позиция мыши во время перетаскивания
+        private Cursor pencilCursor;
+        private Cursor eraserCursor;
+        private Cursor bucketCursor;
+        private Cursor textCursor;
+
         private int x, y;
         private Bitmap bitmap;
+        private Point? startPoint = null;          // начало линии (null = не рисуем)
+        private Point currentPos = Point.Empty;    // текущая позиция мыши во время перетаскивания
+        private Rectangle previewRect = Rectangle.Empty; // для эллипса/прямоугольника
+        private bool isDrawing = false;
+
+        public int EraserRadius { get; set; } = 8;
+        public string FilePath { get; private set; } = null;   // null = новый документ
+        public bool IsDirty { get; private set; } = false;     // был ли изменён рисунок        
         public Bitmap Image => bitmap;
+
         public DocumentForm()
         {
             InitializeComponent();
+            ListAllResources();
             bitmap = new Bitmap(300, 200);
+            this.Activated += DocumentForm_Activated;
             this.DoubleBuffered = true;
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer |
                           ControlStyles.AllPaintingInWmPaint |
@@ -37,6 +49,77 @@ namespace MDIPaint
             using (Graphics g = Graphics.FromImage(bitmap))
             {
                 g.Clear(Color.White);
+            }
+            LoadCustomCursors();
+        }
+
+        private void ListAllResources()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            string[] resources = assembly.GetManifestResourceNames();
+
+            string message = "Доступные ресурсы:\n" + string.Join("\n", resources);
+            MessageBox.Show(message);
+        }
+
+        private void LoadCustomCursors()
+        {
+            try
+            {
+                // Загрузка из ресурсов проекта
+                pencilCursor = new Cursor(GetType(), "MDIPaint.Resources.pencil.cur");
+                eraserCursor = new Cursor(GetType(), "MDIPaint.Resources.eraser.cur");
+                bucketCursor = new Cursor(GetType(), "MDIPaint.Resources.bucket.cur");
+                textCursor = new Cursor(GetType(), "MDIPaint.Resources.text.cur");
+
+                // Для line.cur (если есть)
+                // lineCursor = new Cursor(GetType(), "MDIPaint.Resources.line.cur");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки курсоров: {ex.Message}\n" +
+                               $"Будут использованы стандартные курсоры.",
+                               "Предупреждение",
+                               MessageBoxButtons.OK,
+                               MessageBoxIcon.Warning);
+
+                // Запасной вариант
+                pencilCursor = Cursors.Cross;
+                eraserCursor = Cursors.Cross;
+                bucketCursor = Cursors.Hand;
+                textCursor = Cursors.IBeam;
+            }
+        }
+
+        // Использование в UpdateCursor
+        private void UpdateCursor(Tools tool)
+        {
+            switch (tool)
+            {
+                case Tools.Pencil:
+                    this.Cursor = pencilCursor ?? Cursors.Cross;
+                    break;
+                case Tools.Eraser:
+                    this.Cursor = eraserCursor ?? Cursors.Cross;
+                    break;
+                case Tools.Fill:
+                    this.Cursor = bucketCursor ?? Cursors.Hand;
+                    break;
+                case Tools.Text:
+                    this.Cursor = textCursor ?? Cursors.IBeam;
+                    break;
+                default:
+                    this.Cursor = Cursors.Default;
+                    break;
+            }
+        }
+
+        private void DocumentForm_Activated(object sender, EventArgs e)
+        {
+            // При активации формы обновляем курсор согласно текущему инструменту
+            if (ParentForm is MainForm mainForm)
+            {
+                UpdateCursor(mainForm.Tool);
             }
         }
 
@@ -142,18 +225,14 @@ namespace MDIPaint
             var main = MdiParent as MainForm;
             if (main == null) return;
 
-            if (main.Tool == Tools.Line)
-            {
-                startPoint = e.Location;
-                currentPos = e.Location;
-            }
-            else if (main.Tool == Tools.Pencil)
-            {
-                x = e.X;
-                y = e.Y;
-            }
+            startPoint = e.Location;
+            currentPos = e.Location;
+            isDrawing = true;
 
-            IsDirty = true;
+            if (main.Tool == Tools.Pencil)
+            {
+                // для карандаша можно сразу начать линию
+            }
         }
 
         private void DocumentForm_MouseUp(object sender, MouseEventArgs e)
@@ -165,18 +244,26 @@ namespace MDIPaint
 
             using (var g = Graphics.FromImage(bitmap))
             {
-                if (main.Tool == Tools.Line)
+                switch (main.Tool)
                 {
-                    g.SmoothingMode = SmoothingMode.AntiAlias;
-                    g.DrawLine(new Pen(MainForm.Color, MainForm.Width),
-                               startPoint.Value, currentPos);
-                    IsDirty = true;
+                    case Tools.Line:
+                        g.DrawLine(new Pen(MainForm.Color, MainForm.Width), startPoint.Value, currentPos);
+                        break;
+
+                    case Tools.Ellipse:
+                        var rect = GetNormalizedRect(startPoint.Value, currentPos);
+                        if (main.FilledShapes)
+                            g.FillEllipse(new SolidBrush(MainForm.Color), rect);
+                        else
+                            g.DrawEllipse(new Pen(MainForm.Color, MainForm.Width), rect);
+                        break;
                 }
-                // Pencil уже нарисован в MouseMove
             }
 
+            IsDirty = true;
             Invalidate();
             startPoint = null;
+            isDrawing = false;
         }
 
         private void DocumentForm_MouseMove(object sender, MouseEventArgs e)
@@ -184,70 +271,94 @@ namespace MDIPaint
             var main = MdiParent as MainForm;
             if (main == null) return;
 
-            currentPos = e.Location;   // всегда запоминаем, куда указывает мышь
+            currentPos = e.Location;
 
-            if (e.Button != MouseButtons.Left) return;
+            if (!isDrawing) return;
+
             switch (main.Tool)
             {
                 case Tools.Pencil:
                     DrawPencil(e);
                     break;
+
                 case Tools.Line:
+                case Tools.Ellipse:
+                    Invalidate(); // только просим перерисовку → preview в OnPaint
+                    break;
+
+                case Tools.Eraser:
+                    EraseAt(e.Location);
+                    IsDirty = true;
                     Invalidate();
                     break;
-                default : 
-                    throw new NotImplementedException();
             }
-            
         }
 
-        private void DrawPencil(MouseEventArgs e)
+        private Rectangle GetNormalizedRect(Point p1, Point p2)
         {
-            if (startPoint.HasValue)   // startPoint используем как предыдущую точку
-            {
-                Graphics g = Graphics.FromImage(bitmap);
-                g.DrawLine(new Pen(MainForm.Color, MainForm.Width), startPoint.Value, e.Location);
-            }
-            startPoint = e.Location;
-            IsDirty = true;
-            Invalidate();
+            return new Rectangle(
+                Math.Min(p1.X, p2.X),
+                Math.Min(p1.Y, p2.Y),
+                Math.Abs(p1.X - p2.X),
+                Math.Abs(p1.Y - p2.Y));
         }
 
-        private void DrawLine(MouseEventArgs e)
+        private void EraseAt(Point pt)
         {
-            if (e.Button == MouseButtons.Left)
+            using (var g = Graphics.FromImage(bitmap))
             {
-                Refresh();
-                Graphics g = CreateGraphics();
-                g.DrawLine(new Pen(MainForm.Color, MainForm.Width), x, y, e.X, e.Y);
-            }
-
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-
-            // Сначала рисуем постоянное изображение
-            if (bitmap != null)
-                e.Graphics.DrawImage(bitmap, 0, 0);
-
-            // Если тянем линию — рисуем временную "резинку"
-            var main = MdiParent as MainForm;
-            if (main != null &&
-                main.Tool == Tools.Line &&
-                startPoint.HasValue &&
-                (MouseButtons & MouseButtons.Left) == MouseButtons.Left)
-            {
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                using (var pen = new Pen(MainForm.Color, MainForm.Width))
+                using (var brush = new SolidBrush(Color.White)) // или другой фон
                 {
-                    // pen.DashStyle = DashStyle.Dash;   // ← можно сделать пунктирной для красоты
-                    e.Graphics.DrawLine(pen, startPoint.Value, currentPos);
+                    g.FillEllipse(brush, pt.X - EraserRadius, pt.Y - EraserRadius,
+                                       EraserRadius * 2, EraserRadius * 2);
                 }
             }
         }
 
+        private void DrawPencil(MouseEventArgs e)
+        {
+            if (startPoint.HasValue)
+            {
+                using (var g = Graphics.FromImage(bitmap))
+                    g.DrawLine(new Pen(MainForm.Color, MainForm.Width), startPoint.Value, e.Location);
+                startPoint = e.Location;
+                IsDirty = true;
+                Invalidate();
+            }
+        }
+
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            if (bitmap != null)
+                e.Graphics.DrawImage(bitmap, 0, 0);
+
+            var main = MdiParent as MainForm;
+            if (main == null || !isDrawing || !startPoint.HasValue) return;
+
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            switch (main.Tool)
+            {
+                case Tools.Line:
+                    e.Graphics.DrawLine(new Pen(MainForm.Color, MainForm.Width), startPoint.Value, currentPos);
+                    break;
+
+                case Tools.Ellipse:
+                    var rect = GetNormalizedRect(startPoint.Value, currentPos);
+                    if (rect.Width > 0 && rect.Height > 0)
+                    {
+                        if (main.FilledShapes)
+                            e.Graphics.FillEllipse(new SolidBrush(MainForm.Color), rect);
+                        else
+                            e.Graphics.DrawEllipse(new Pen(MainForm.Color, MainForm.Width), rect);
+                    }
+                    break;
+            }
+        }
+
+        
 
 
     }

@@ -10,5 +10,9 @@ namespace MDIPaint
     {
         Pencil = 0,
         Line = 1,
+        Ellipse = 2,
+        Eraser = 3,
+        Fill = 4,
+        Text = 5,
     }
 }

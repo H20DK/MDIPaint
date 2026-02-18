@@ -16,6 +16,7 @@ namespace MDIPaint
         public static Color Color { get; set; }
         public static new int Width { get; set; }
         public Tools Tool { get; set; }
+        public bool FilledShapes { get; set; } = false;
 
         public MainForm()
         {
@@ -196,7 +197,7 @@ namespace MDIPaint
             }
             if (int.TryParse(brushSizeTextBox.Text, out int size) && size >= 1)
             {
-                if (size > 100) 
+                if (size > 100)
                 {
                     MainForm.Width = 100;
                     brushSizeTextBox.Text = Width.ToString();
@@ -212,6 +213,28 @@ namespace MDIPaint
                     brushSizeTextBox.Text = Width.ToString();
                 }
             }
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked)
+            {
+                FilledShapes = true;
+            }
+            else
+            {
+                FilledShapes = false;
+            }
+        }
+
+        private void ellipseBtn_Click(object sender, EventArgs e)
+        {
+            Tool = Tools.Ellipse;
+        }
+
+        private void eraserBtn_Click(object sender, EventArgs e)
+        {
+            Tool = Tools.Eraser;
         }
     }
 }

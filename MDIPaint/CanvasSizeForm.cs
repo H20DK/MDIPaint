@@ -14,6 +14,9 @@ namespace MDIPaint
     {
         public int NewWidth { get; private set; }
         public int NewHeight { get; private set; }
+        private const int MAX_CANVAS_SIZE = 5000;
+        private const int MIN_CANVAS_SIZE = 1;
+
         public CanvasSizeForm(int currentWidth, int currentHeight)
         {
             InitializeComponent();
@@ -79,16 +82,16 @@ namespace MDIPaint
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            if (!int.TryParse(txtWidth.Text, out int w) || w < 1)
+            if (!int.TryParse(txtWidth.Text, out int w) || w < MIN_CANVAS_SIZE || w > MAX_CANVAS_SIZE)
             {
-                MessageBox.Show("Ширина должна быть целым числом больше 0", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Ширина должна быть целым числом от {MIN_CANVAS_SIZE} до {MAX_CANVAS_SIZE}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtWidth.Focus();
                 return;
             }
 
-            if (!int.TryParse(txtHeight.Text, out int h) || h < 1)
+            if (!int.TryParse(txtHeight.Text, out int h) || h < MIN_CANVAS_SIZE || h > MAX_CANVAS_SIZE)
             {
-                MessageBox.Show("Высота должна быть целым числом больше 0", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Высота должна быть целым числом от {MIN_CANVAS_SIZE} до {MAX_CANVAS_SIZE}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtHeight.Focus();
                 return;
             }
