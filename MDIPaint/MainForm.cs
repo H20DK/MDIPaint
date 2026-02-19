@@ -27,6 +27,20 @@ namespace MDIPaint
             brushSizeTextBox.Text = Width.ToString();
         }
 
+        public void UpdateStatus(int x, int y, int w, int h, Tools tool, bool dirty)
+        {
+            if (sslCursorPos != null)
+                sslCursorPos.Text = $"X: {x}, Y: {y}";
+
+            if (sslImageSize != null)
+                sslImageSize.Text = $"Размер: {w} × {h}";
+
+            if (sslTool != null)
+                sslTool.Text = $"Инструмент: {tool}";
+
+            // можно четвёртую панель для * или "Изменён"
+        }
+
         private void выходToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
@@ -166,11 +180,13 @@ namespace MDIPaint
         private void pencilBtn_Click(object sender, EventArgs e)
         {
             Tool = Tools.Pencil;
+            SetTool(Tool);
         }
 
         private void lineBtn_Click(object sender, EventArgs e)
         {
             Tool = Tools.Line;
+            SetTool(Tool);
         }
 
         private void brushSizeTextBox_KeyPress(object sender, KeyPressEventArgs e)
@@ -230,11 +246,52 @@ namespace MDIPaint
         private void ellipseBtn_Click(object sender, EventArgs e)
         {
             Tool = Tools.Ellipse;
+            SetTool(Tool);
         }
 
         private void eraserBtn_Click(object sender, EventArgs e)
         {
             Tool = Tools.Eraser;
+            SetTool(Tool);
+        }
+
+        private void textBtn_Click(object sender, EventArgs e)
+        {
+            Tool = Tools.Text;
+            SetTool(Tool);
+        }
+
+        private void bucketBtn_Click(object sender, EventArgs e)
+        {
+            Tool = Tools.Fill;
+            SetTool(Tool);
+        }
+
+        private void SetTool(Tools tool)
+        {
+            Tool = tool;
+
+            // Обновляем курсор во всех открытых документах
+            foreach (Form child in this.MdiChildren)
+            {
+                if (child is DocumentForm doc)
+                {
+                    doc.UpdateCursor(tool);
+                }
+            }
+        }
+
+        private void MainForm_MdiChildActivate(object sender, EventArgs e)
+        {
+            if (ActiveMdiChild is DocumentForm doc)
+            {
+                UpdateStatus(0, 0, doc.Image.Width, doc.Image.Height, Tool, doc.IsDirty);
+                // + обновить курсор и т.д.
+            }
+            else
+            {
+                // очистить статус
+            }
         }
     }
 }

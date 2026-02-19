@@ -57,19 +57,24 @@
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.brushSizeTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.pencilBtn = new System.Windows.Forms.ToolStripButton();
-            this.lineBtn = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.ellipseBtn = new System.Windows.Forms.ToolStripButton();
             this.eraserBtn = new System.Windows.Forms.ToolStripButton();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.textBtn = new System.Windows.Forms.ToolStripButton();
             this.bucketBtn = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.lineBtn = new System.Windows.Forms.ToolStripButton();
+            this.ellipseBtn = new System.Windows.Forms.ToolStripButton();
             this.arrowBtn = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomInBtn = new System.Windows.Forms.ToolStripButton();
             this.zoomOutBtn = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.sslCursorPos = new System.Windows.Forms.ToolStripStatusLabel();
+            this.sslImageSize = new System.Windows.Forms.ToolStripStatusLabel();
+            this.sslTool = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -267,7 +272,7 @@
             // 
             this.красныйToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("красныйToolStripMenuItem.Image")));
             this.красныйToolStripMenuItem.Name = "красныйToolStripMenuItem";
-            this.красныйToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.красныйToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.красныйToolStripMenuItem.Text = "Красный";
             this.красныйToolStripMenuItem.Click += new System.EventHandler(this.красныйToolStripMenuItem_Click);
             // 
@@ -275,7 +280,7 @@
             // 
             this.синийToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("синийToolStripMenuItem.Image")));
             this.синийToolStripMenuItem.Name = "синийToolStripMenuItem";
-            this.синийToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.синийToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.синийToolStripMenuItem.Text = "Синий";
             this.синийToolStripMenuItem.Click += new System.EventHandler(this.синийToolStripMenuItem_Click);
             // 
@@ -283,14 +288,14 @@
             // 
             this.зеленыйToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("зеленыйToolStripMenuItem.Image")));
             this.зеленыйToolStripMenuItem.Name = "зеленыйToolStripMenuItem";
-            this.зеленыйToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.зеленыйToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.зеленыйToolStripMenuItem.Text = "Зеленый";
             this.зеленыйToolStripMenuItem.Click += new System.EventHandler(this.зеленыйToolStripMenuItem_Click);
             // 
             // другойToolStripMenuItem
             // 
             this.другойToolStripMenuItem.Name = "другойToolStripMenuItem";
-            this.другойToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.другойToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.другойToolStripMenuItem.Text = "Другой...";
             this.другойToolStripMenuItem.Click += new System.EventHandler(this.другойToolStripMenuItem_Click);
             // 
@@ -323,6 +328,41 @@
             this.pencilBtn.Text = "Карандаш";
             this.pencilBtn.Click += new System.EventHandler(this.pencilBtn_Click);
             // 
+            // eraserBtn
+            // 
+            this.eraserBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.eraserBtn.Image = ((System.Drawing.Image)(resources.GetObject("eraserBtn.Image")));
+            this.eraserBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.eraserBtn.Name = "eraserBtn";
+            this.eraserBtn.Size = new System.Drawing.Size(23, 22);
+            this.eraserBtn.Text = "Ластик";
+            this.eraserBtn.Click += new System.EventHandler(this.eraserBtn_Click);
+            // 
+            // textBtn
+            // 
+            this.textBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.textBtn.Image = ((System.Drawing.Image)(resources.GetObject("textBtn.Image")));
+            this.textBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.textBtn.Name = "textBtn";
+            this.textBtn.Size = new System.Drawing.Size(23, 22);
+            this.textBtn.Text = "Текст";
+            this.textBtn.Click += new System.EventHandler(this.textBtn_Click);
+            // 
+            // bucketBtn
+            // 
+            this.bucketBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.bucketBtn.Image = ((System.Drawing.Image)(resources.GetObject("bucketBtn.Image")));
+            this.bucketBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.bucketBtn.Name = "bucketBtn";
+            this.bucketBtn.Size = new System.Drawing.Size(23, 22);
+            this.bucketBtn.Text = "Заливка";
+            this.bucketBtn.Click += new System.EventHandler(this.bucketBtn_Click);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
+            // 
             // lineBtn
             // 
             this.lineBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -332,11 +372,6 @@
             this.lineBtn.Size = new System.Drawing.Size(23, 22);
             this.lineBtn.Text = "Линия";
             this.lineBtn.Click += new System.EventHandler(this.lineBtn_Click);
-            // 
-            // toolStripSeparator4
-            // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
             // 
             // ellipseBtn
             // 
@@ -348,45 +383,6 @@
             this.ellipseBtn.Text = "Эллипс";
             this.ellipseBtn.Click += new System.EventHandler(this.ellipseBtn_Click);
             // 
-            // eraserBtn
-            // 
-            this.eraserBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.eraserBtn.Image = ((System.Drawing.Image)(resources.GetObject("eraserBtn.Image")));
-            this.eraserBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.eraserBtn.Name = "eraserBtn";
-            this.eraserBtn.Size = new System.Drawing.Size(23, 22);
-            this.eraserBtn.Text = "Ластик";
-            this.eraserBtn.Click += new System.EventHandler(this.eraserBtn_Click);
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(654, 27);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(134, 17);
-            this.checkBox1.TabIndex = 5;
-            this.checkBox1.Text = "Закрашенная фигура";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
-            // 
-            // textBtn
-            // 
-            this.textBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.textBtn.Image = ((System.Drawing.Image)(resources.GetObject("textBtn.Image")));
-            this.textBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.textBtn.Name = "textBtn";
-            this.textBtn.Size = new System.Drawing.Size(23, 22);
-            this.textBtn.Text = "Текст";
-            // 
-            // bucketBtn
-            // 
-            this.bucketBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bucketBtn.Image = ((System.Drawing.Image)(resources.GetObject("bucketBtn.Image")));
-            this.bucketBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.bucketBtn.Name = "bucketBtn";
-            this.bucketBtn.Size = new System.Drawing.Size(23, 22);
-            this.bucketBtn.Text = "Заливка";
-            // 
             // arrowBtn
             // 
             this.arrowBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -395,6 +391,11 @@
             this.arrowBtn.Name = "arrowBtn";
             this.arrowBtn.Size = new System.Drawing.Size(23, 22);
             this.arrowBtn.Text = "Стрелка";
+            // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 25);
             // 
             // zoomInBtn
             // 
@@ -414,16 +415,53 @@
             this.zoomOutBtn.Size = new System.Drawing.Size(23, 22);
             this.zoomOutBtn.Text = "Увеличить";
             // 
-            // toolStripSeparator5
+            // checkBox1
             // 
-            this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 25);
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(654, 27);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(134, 17);
+            this.checkBox1.TabIndex = 5;
+            this.checkBox1.Text = "Закрашенная фигура";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.sslCursorPos,
+            this.sslImageSize,
+            this.sslTool});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 428);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(800, 22);
+            this.statusStrip1.TabIndex = 7;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // sslCursorPos
+            // 
+            this.sslCursorPos.Name = "sslCursorPos";
+            this.sslCursorPos.Size = new System.Drawing.Size(103, 17);
+            this.sslCursorPos.Text = "Позиция курсора";
+            // 
+            // sslImageSize
+            // 
+            this.sslImageSize.Name = "sslImageSize";
+            this.sslImageSize.Size = new System.Drawing.Size(86, 17);
+            this.sslImageSize.Text = "Размер холста";
+            // 
+            // sslTool
+            // 
+            this.sslTool.Name = "sslTool";
+            this.sslTool.Size = new System.Drawing.Size(74, 17);
+            this.sslTool.Text = "Инструмент";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.menuStrip1);
@@ -433,10 +471,13 @@
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Мой Paint";
+            this.MdiChildActivate += new System.EventHandler(this.MainForm_MdiChildActivate);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -483,6 +524,10 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripButton zoomInBtn;
         private System.Windows.Forms.ToolStripButton zoomOutBtn;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel sslCursorPos;
+        private System.Windows.Forms.ToolStripStatusLabel sslImageSize;
+        private System.Windows.Forms.ToolStripStatusLabel sslTool;
     }
 }
 

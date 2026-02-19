@@ -36,8 +36,11 @@ namespace MDIPaint
         public DocumentForm()
         {
             InitializeComponent();
-            ListAllResources();
             bitmap = new Bitmap(300, 200);
+            // Загружаем курсоры
+            LoadCustomCursors();
+            // Подписываемся на события
+            this.Load += DocumentForm_Load;
             this.Activated += DocumentForm_Activated;
             this.DoubleBuffered = true;
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer |
@@ -50,49 +53,83 @@ namespace MDIPaint
             {
                 g.Clear(Color.White);
             }
-            LoadCustomCursors();
         }
 
-        private void ListAllResources()
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            string[] resources = assembly.GetManifestResourceNames();
+            base.OnFormClosing(e);
 
-            string message = "Доступные ресурсы:\n" + string.Join("\n", resources);
-            MessageBox.Show(message);
+            if (!IsDirty) return;
+
+            var result = MessageBox.Show(
+                $"Сохранить изменения в {Text ?? "новом документе"}?",
+                "Сохранение",
+                MessageBoxButtons.YesNoCancel,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Cancel)
+            {
+                e.Cancel = true;
+            }
+            else if (result == DialogResult.Yes)
+            {
+                if (!Save()) // твой метод Save
+                    e.Cancel = true;
+            }
+        }
+
+        private void DocumentForm_Load(object sender, EventArgs e)
+        {
+            // При загрузке формы устанавливаем курсор
+            if (ParentForm is MainForm mainForm)
+            {
+                UpdateCursor(mainForm.Tool);
+            }
+        }
+
+        private void DocumentForm_Activated(object sender, EventArgs e)
+        {
+            // При активации обновляем курсор
+            if (ParentForm is MainForm mainForm)
+            {
+                UpdateCursor(mainForm.Tool);
+            }
         }
 
         private void LoadCustomCursors()
         {
             try
             {
-                // Загрузка из ресурсов проекта
-                pencilCursor = new Cursor(GetType(), "MDIPaint.Resources.pencil.cur");
-                eraserCursor = new Cursor(GetType(), "MDIPaint.Resources.eraser.cur");
-                bucketCursor = new Cursor(GetType(), "MDIPaint.Resources.bucket.cur");
-                textCursor = new Cursor(GetType(), "MDIPaint.Resources.text.cur");
+                // Ищем файлы в папке Resources рядом с exe
+                string basePath = Path.Combine(System.Windows.Forms.Application.StartupPath, "Resources");
 
-                // Для line.cur (если есть)
-                // lineCursor = new Cursor(GetType(), "MDIPaint.Resources.line.cur");
+                pencilCursor = LoadCursorFromFile(Path.Combine(basePath, "pencil.cur"), Cursors.Cross);
+                eraserCursor = LoadCursorFromFile(Path.Combine(basePath, "eraser.cur"), Cursors.Cross);
+                bucketCursor = LoadCursorFromFile(Path.Combine(basePath, "bucket.cur"), Cursors.Hand);
+                textCursor = LoadCursorFromFile(Path.Combine(basePath, "text.cur"), Cursors.IBeam);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка загрузки курсоров: {ex.Message}\n" +
-                               $"Будут использованы стандартные курсоры.",
-                               "Предупреждение",
-                               MessageBoxButtons.OK,
-                               MessageBoxIcon.Warning);
-
-                // Запасной вариант
-                pencilCursor = Cursors.Cross;
-                eraserCursor = Cursors.Cross;
-                bucketCursor = Cursors.Hand;
-                textCursor = Cursors.IBeam;
+                //MessageBox.Show($"Ошибка загрузки курсоров: {ex.Message}");
+                //// Запасные варианты
+                //pencilCursor = Cursors.Cross;
+                //eraserCursor = Cursors.Cross;
+                //bucketCursor = Cursors.Hand;
+                //textCursor = Cursors.IBeam;
             }
         }
 
+        private Cursor LoadCursorFromFile(string filePath, Cursor defaultCursor)
+        {
+            if (File.Exists(filePath))
+            {
+                return new Cursor(filePath);
+            }
+            return defaultCursor;
+        }
+
         // Использование в UpdateCursor
-        private void UpdateCursor(Tools tool)
+        public void UpdateCursor(Tools tool)
         {
             switch (tool)
             {
@@ -109,19 +146,12 @@ namespace MDIPaint
                     this.Cursor = textCursor ?? Cursors.IBeam;
                     break;
                 default:
-                    this.Cursor = Cursors.Default;
+                    this.Cursor = Cursors.Cross;
                     break;
             }
         }
 
-        private void DocumentForm_Activated(object sender, EventArgs e)
-        {
-            // При активации формы обновляем курсор согласно текущему инструменту
-            if (ParentForm is MainForm mainForm)
-            {
-                UpdateCursor(mainForm.Tool);
-            }
-        }
+
 
         public void ResizeCanvas(int newWidth, int newHeight)
         {
@@ -233,6 +263,8 @@ namespace MDIPaint
             {
                 // для карандаша можно сразу начать линию
             }
+            if (main != null)
+                main.UpdateStatus(e.X, e.Y, bitmap.Width, bitmap.Height, main.Tool, IsDirty);
         }
 
         private void DocumentForm_MouseUp(object sender, MouseEventArgs e)

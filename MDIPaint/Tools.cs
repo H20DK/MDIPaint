@@ -14,5 +14,6 @@ namespace MDIPaint
         Eraser = 3,
         Fill = 4,
         Text = 5,
+        Arrow = 6,
     }
 }
