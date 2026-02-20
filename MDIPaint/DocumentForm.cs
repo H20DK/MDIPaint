@@ -11,22 +11,30 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Net.WebRequestMethods;
+using static System.Windows.Forms.LinkLabel;
 
 namespace MDIPaint
 {
     public partial class DocumentForm : Form
     {
+        private PointF? startImage = null;
+        private PointF currentImage = new PointF();
+        private string pendingText = null;
+        private Point textPos;
         private Cursor pencilCursor;
         private Cursor eraserCursor;
         private Cursor bucketCursor;
         private Cursor textCursor;
-
-        private int x, y;
         private Bitmap bitmap;
-        private Point? startPoint = null;          // начало линии (null = не рисуем)
-        private Point currentPos = Point.Empty;    // текущая позиция мыши во время перетаскивания
-        private Rectangle previewRect = Rectangle.Empty; // для эллипса/прямоугольника
         private bool isDrawing = false;
+
+        private float zoom = 1.0f;
+        private PointF viewOffset = new PointF(0, 0);
+        private const float ZOOM_STEP = 0.25f;
+        private const float MIN_ZOOM = 0.25f;
+        private const float MAX_ZOOM = 8.0f;
+
 
         public int EraserRadius { get; set; } = 8;
         public string FilePath { get; private set; } = null;   // null = новый документ
@@ -53,6 +61,90 @@ namespace MDIPaint
             {
                 g.Clear(Color.White);
             }
+        }
+
+        private void FloodFill(Point pt, Color newColor)
+        {
+            if (bitmap == null) return;
+
+            Color targetColor = bitmap.GetPixel(pt.X, pt.Y);
+            if (targetColor == newColor) return;
+
+            Stack<Point> pixels = new Stack<Point>();
+            pixels.Push(pt);
+
+            while (pixels.Count > 0)
+            {
+                Point p = pixels.Pop();
+
+                if (p.X < 0 || p.X >= bitmap.Width || p.Y < 0 || p.Y >= bitmap.Height)
+                    continue;
+
+                if (bitmap.GetPixel(p.X, p.Y) != targetColor)
+                    continue;
+
+                bitmap.SetPixel(p.X, p.Y, newColor);
+
+                pixels.Push(new Point(p.X + 1, p.Y));
+                pixels.Push(new Point(p.X - 1, p.Y));
+                pixels.Push(new Point(p.X, p.Y + 1));
+                pixels.Push(new Point(p.X, p.Y - 1));
+            }
+
+            IsDirty = true;
+            Invalidate();
+        }
+
+        public void ZoomIn(Point? mouseLocation = null)
+        {
+            if (bitmap == null) return;
+
+            float oldZoom = zoom;
+            zoom = Math.Min(MAX_ZOOM, zoom + ZOOM_STEP);
+
+            if (mouseLocation.HasValue)
+            {
+                // Зум относительно точки под курсором (самый удобный вариант)
+                Point pt = mouseLocation.Value;
+                float dx = pt.X - viewOffset.X;
+                float dy = pt.Y - viewOffset.Y;
+
+                viewOffset.X = pt.X - dx * (zoom / oldZoom);
+                viewOffset.Y = pt.Y - dy * (zoom / oldZoom);
+            }
+            else
+            {
+                // Зум относительно центра окна
+                viewOffset.X -= (ClientSize.Width / 2f) * (zoom - oldZoom) / zoom;
+                viewOffset.Y -= (ClientSize.Height / 2f) * (zoom - oldZoom) / zoom;
+            }
+
+            UpdateScrollbars();
+            Invalidate();
+        }
+
+        public void ZoomOut()
+        {
+            if (bitmap == null) return;
+
+            float oldZoom = zoom;
+            zoom = Math.Max(MIN_ZOOM, zoom - ZOOM_STEP);
+
+            viewOffset.X -= (ClientSize.Width / 2f) * (zoom - oldZoom) / zoom;
+            viewOffset.Y -= (ClientSize.Height / 2f) * (zoom - oldZoom) / zoom;
+
+            UpdateScrollbars();
+            Invalidate();
+        }
+
+        private void UpdateScrollbars()
+        {
+            if (bitmap == null) return;
+
+            int scaledWidth = (int)(bitmap.Width * zoom);
+            int scaledHeight = (int)(bitmap.Height * zoom);
+
+            AutoScrollMinSize = new Size(scaledWidth + 40, scaledHeight + 40);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -98,30 +190,17 @@ namespace MDIPaint
 
         private void LoadCustomCursors()
         {
-            try
-            {
-                // Ищем файлы в папке Resources рядом с exe
-                string basePath = Path.Combine(System.Windows.Forms.Application.StartupPath, "Resources");
+            string basePath = Path.Combine(System.Windows.Forms.Application.StartupPath, "Resources");
 
-                pencilCursor = LoadCursorFromFile(Path.Combine(basePath, "pencil.cur"), Cursors.Cross);
-                eraserCursor = LoadCursorFromFile(Path.Combine(basePath, "eraser.cur"), Cursors.Cross);
-                bucketCursor = LoadCursorFromFile(Path.Combine(basePath, "bucket.cur"), Cursors.Hand);
-                textCursor = LoadCursorFromFile(Path.Combine(basePath, "text.cur"), Cursors.IBeam);
-            }
-            catch (Exception ex)
-            {
-                //MessageBox.Show($"Ошибка загрузки курсоров: {ex.Message}");
-                //// Запасные варианты
-                //pencilCursor = Cursors.Cross;
-                //eraserCursor = Cursors.Cross;
-                //bucketCursor = Cursors.Hand;
-                //textCursor = Cursors.IBeam;
-            }
+            pencilCursor = LoadCursorFromFile(Path.Combine(basePath, "pencil.cur"), Cursors.Cross);
+            eraserCursor = LoadCursorFromFile(Path.Combine(basePath, "eraser.cur"), Cursors.Cross);
+            bucketCursor = LoadCursorFromFile(Path.Combine(basePath, "bucket.cur"), Cursors.Hand);
+            textCursor = LoadCursorFromFile(Path.Combine(basePath, "text.cur"), Cursors.IBeam);
         }
 
         private Cursor LoadCursorFromFile(string filePath, Cursor defaultCursor)
         {
-            if (File.Exists(filePath))
+            if (System.IO.File.Exists(filePath))
             {
                 return new Cursor(filePath);
             }
@@ -169,21 +248,12 @@ namespace MDIPaint
                 g.DrawImage(bitmap, 0, 0, Math.Min(bitmap.Width, newWidth), Math.Min(bitmap.Height, newHeight));
             }
 
-            // Заменяем старый bitmap на новый
-            bitmap?.Dispose();          // освобождаем старую память
+            bitmap?.Dispose();
             bitmap = newBitmap;
 
-            // Обновляем форму
             this.AutoScrollMinSize = new Size(bitmap.Width, bitmap.Height);
-            this.Invalidate();          // перерисовываем
+            this.Invalidate();
         }
-
-        // Если хочешь центрировать старое изображение при увеличении размера:
-        // вместо g.DrawImage(bitmap, 0, 0, ...) можно сделать:
-        // int dx = (newWidth  - bitmap.Width)  / 2;
-        // int dy = (newHeight - bitmap.Height) / 2;
-        // g.DrawImage(bitmap, dx, dy);
-
 
         public bool Save(bool askForName = false)
         {
@@ -255,46 +325,142 @@ namespace MDIPaint
             var main = MdiParent as MainForm;
             if (main == null) return;
 
-            startPoint = e.Location;
-            currentPos = e.Location;
+            PointF imgPt = ScreenToImage(e.Location);
+
+            // Проверяем, попали ли в изображение
+            if (imgPt.X < 0 || imgPt.Y < 0 ||
+                imgPt.X >= bitmap.Width || imgPt.Y >= bitmap.Height)
+            {
+                return;
+            }
+
+            startImage = imgPt;
+            currentImage = imgPt;
             isDrawing = true;
 
-            if (main.Tool == Tools.Pencil)
+            switch (main.Tool)
             {
-                // для карандаша можно сразу начать линию
+                case Tools.Pencil:
+                    break;
+                case Tools.Line:
+                    break;
+                case Tools.Ellipse:
+                    break;
+                case Tools.Eraser:
+                    break;
+                case Tools.Fill:
+                    if (e.Button == MouseButtons.Left)
+                    {
+                        Point origPt = new Point((int)imgPt.X, (int)imgPt.Y);
+                        if (origPt.X >= 0 && origPt.X < bitmap.Width &&
+                            origPt.Y >= 0 && origPt.Y < bitmap.Height)
+                        {
+                            FloodFill(origPt, MainForm.Color);   // твой старый метод
+                        }
+                    }
+                    break;
+                case Tools.Text:
+                    if (e.Button == MouseButtons.Left)
+                    {
+
+                        pendingText = null;
+                        startImage = ScreenToImage(e.Location);
+
+                        using (var form = new Form
+                        {
+                            Text = "Введите текст",
+                            Size = new Size(320, 140),
+                            StartPosition = FormStartPosition.CenterParent,
+                            FormBorderStyle = FormBorderStyle.FixedDialog,
+                            MaximizeBox = false,
+                            MinimizeBox = false
+                        })
+                        {
+                            var tb = new TextBox
+                            {
+                                Location = new Point(12, 12),
+                                Width = 280,
+                                Multiline = true,
+                                Height = 60,
+                                AcceptsReturn = true,
+                                AcceptsTab = true
+                            };
+
+                            var btnOk = new Button
+                            {
+                                Text = "Вставить",
+                                Location = new Point(120, 85),
+                                DialogResult = DialogResult.OK,
+                                Width = 80
+                            };
+
+                            form.Controls.Add(tb);
+                            form.Controls.Add(btnOk);
+                            form.AcceptButton = btnOk;
+
+                            if (form.ShowDialog(this) == DialogResult.OK && !string.IsNullOrWhiteSpace(tb.Text))
+                            {
+                                pendingText = tb.Text;
+                                Invalidate();
+                                using (var g = Graphics.FromImage(bitmap))
+                                {
+                                    using (var font = new Font("Arial", 14))
+                                    using (var brush = new SolidBrush(MainForm.Color))
+                                    {
+                                        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+                                        g.DrawString(tb.Text, font, brush, startImage.Value.X, startImage.Value.Y);
+                                    }
+                                }
+                                IsDirty = true;
+                                Invalidate();
+                            }
+                        }
+                    }
+                    break;
+                case Tools.Arrow:
+                    break;                    
             }
-            if (main != null)
-                main.UpdateStatus(e.X, e.Y, bitmap.Width, bitmap.Height, main.Tool, IsDirty);
         }
+            
+
 
         private void DocumentForm_MouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left) return;
+            if (!isDrawing || !startImage.HasValue) return;
 
             var main = MdiParent as MainForm;
-            if (main == null || !startPoint.HasValue) return;
+            if (main == null) return;
 
             using (var g = Graphics.FromImage(bitmap))
             {
                 switch (main.Tool)
                 {
+                    case Tools.Pencil:
                     case Tools.Line:
-                        g.DrawLine(new Pen(MainForm.Color, MainForm.Width), startPoint.Value, currentPos);
+                        g.DrawLine(new Pen(MainForm.Color, MainForm.Width), startImage.Value, currentImage);
                         break;
-
                     case Tools.Ellipse:
-                        var rect = GetNormalizedRect(startPoint.Value, currentPos);
+                        var rect = GetRectFromPoints(startImage.Value, currentImage);
                         if (main.FilledShapes)
                             g.FillEllipse(new SolidBrush(MainForm.Color), rect);
                         else
                             g.DrawEllipse(new Pen(MainForm.Color, MainForm.Width), rect);
                         break;
+                    case Tools.Eraser:
+                    case Tools.Fill:
+                    case Tools.Text:                        
+                        break;
+                    case Tools.Arrow:
+                        float finalThickness = MainForm.Width * 1.5f;     // можно умножить, чтобы стрелка была толще
+                                                                          // или просто MainForm.Width, если толщина уже достаточная
+
+                        DrawThickArrow(g, startImage.Value, currentImage, finalThickness, MainForm.Color, main.FilledShapes);
+                        break;
                 }
             }
-
+            startImage = null;
             IsDirty = true;
             Invalidate();
-            startPoint = null;
             isDrawing = false;
         }
 
@@ -303,95 +469,220 @@ namespace MDIPaint
             var main = MdiParent as MainForm;
             if (main == null) return;
 
-            currentPos = e.Location;
+            PointF imgPt = ScreenToImage(e.Location);
+            currentImage = imgPt;
 
-            if (!isDrawing) return;
+            if (main != null)
+                main.UpdateStatus(e.X, e.Y, bitmap.Width, bitmap.Height, main.Tool, IsDirty);
 
             switch (main.Tool)
             {
                 case Tools.Pencil:
-                    DrawPencil(e);
+                    if (startImage.HasValue)
+                    {
+                        using (var g = Graphics.FromImage(bitmap))
+                        {
+                            g.DrawLine(
+                                new Pen(MainForm.Color, MainForm.Width),
+                                startImage.Value, currentImage
+                            );
+                        }
+                        startImage = currentImage;
+                        IsDirty = true;
+                        Invalidate();
+                    }
                     break;
-
                 case Tools.Line:
-                case Tools.Ellipse:
-                    Invalidate(); // только просим перерисовку → preview в OnPaint
+                    Invalidate();
                     break;
-
+                case Tools.Ellipse:
+                    Invalidate();
+                    break;
                 case Tools.Eraser:
-                    EraseAt(e.Location);
+                    if (e.Button == MouseButtons.Left)
+                    {
+                        using (var g = Graphics.FromImage(bitmap))
+                        {
+                            using (var brush = new SolidBrush(Color.White)) // или другой фон
+                            {
+                                g.FillEllipse(brush, imgPt.X - EraserRadius, imgPt.Y - EraserRadius,
+                                                   EraserRadius * 2, EraserRadius * 2);
+                            }
+                        }
+                    }
                     IsDirty = true;
                     Invalidate();
                     break;
+                case Tools.Fill:
+                case Tools.Text:
+                case Tools.Arrow:
+                    break;
             }
         }
 
-        private Rectangle GetNormalizedRect(Point p1, Point p2)
+        private RectangleF GetRectFromPoints(PointF p1, PointF p2)
         {
-            return new Rectangle(
+            return new RectangleF(
                 Math.Min(p1.X, p2.X),
                 Math.Min(p1.Y, p2.Y),
                 Math.Abs(p1.X - p2.X),
-                Math.Abs(p1.Y - p2.Y));
+                Math.Abs(p1.Y - p2.Y)
+            );
         }
 
-        private void EraseAt(Point pt)
+        private void DrawThickArrow(Graphics g, PointF start, PointF end, float thickness, Color color, bool filled)
         {
-            using (var g = Graphics.FromImage(bitmap))
+            if (start == end) return;
+
+            // Направление стрелки
+            float dx = end.X - start.X;
+            float dy = end.Y - start.Y;
+            float length = (float)Math.Sqrt(dx * dx + dy * dy);
+            if (length < 1) return;
+
+            // Единичный вектор направления
+            float ux = dx / length;
+            float uy = dy / length;
+
+            // Перпендикулярный вектор (для ширины тела стрелки)
+            float px = -uy;
+            float py = ux;
+
+            // Половина толщины
+            float halfTh = thickness / 2f;
+
+            // Точки тела стрелки (прямоугольник)
+            PointF A = new PointF(start.X + px * halfTh, start.Y + py * halfTh);
+            PointF B = new PointF(start.X - px * halfTh, start.Y - py * halfTh);
+            PointF C = new PointF(end.X - px * halfTh, end.Y - py * halfTh);
+            PointF D = new PointF(end.X + px * halfTh, end.Y + py * halfTh);
+
+            // Точки наконечника
+            float headLength = thickness * 2.5f;           // длина наконечника ≈ 2.5 × толщина
+            float headWidth = thickness * 2.2f;           // ширина основания наконечника
+
+            PointF tip = new PointF(
+                end.X + ux * headLength,
+                end.Y + uy * headLength
+            );
+
+            PointF left = new PointF(
+                end.X + px * headWidth / 2,
+                end.Y + py * headWidth / 2
+            );
+            PointF right = new PointF(
+                end.X - px * headWidth / 2,
+                end.Y - py * headWidth / 2
+            );
+
+            // Соединяем точки наконечника с телом
+            PointF connectLeft = new PointF(C.X + (left.X - C.X) * 0.3f, C.Y + (left.Y - C.Y) * 0.3f);
+            PointF connectRight = new PointF(D.X + (right.X - D.X) * 0.3f, D.Y + (right.Y - D.Y) * 0.3f);
+
+            // Массив точек для полигона
+            PointF[] points = new PointF[]
             {
-                using (var brush = new SolidBrush(Color.White)) // или другой фон
+        A, B, C, connectRight, right, tip, left, connectLeft, D, A
+            };
+
+            using (var pen = new Pen(color, 1f))
+            {
+                if (filled)
                 {
-                    g.FillEllipse(brush, pt.X - EraserRadius, pt.Y - EraserRadius,
-                                       EraserRadius * 2, EraserRadius * 2);
+                    using (var brush = new SolidBrush(color))
+                    {
+                        g.FillPolygon(brush, points);
+                    }
                 }
+
+                // Контур всегда рисуем (чтобы была граница)
+                g.DrawPolygon(pen, points);
             }
         }
 
-        private void DrawPencil(MouseEventArgs e)
+
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (startPoint.HasValue)
+            base.OnMouseWheel(e);
+
+            if (Control.ModifierKeys == Keys.Control)
             {
-                using (var g = Graphics.FromImage(bitmap))
-                    g.DrawLine(new Pen(MainForm.Color, MainForm.Width), startPoint.Value, e.Location);
-                startPoint = e.Location;
-                IsDirty = true;
-                Invalidate();
+                if (e.Delta > 0)
+                    ZoomIn(e.Location);
+                else if (e.Delta < 0)
+                    ZoomOut();
+            }
+            else
+            {
+                // Обычное прокручивание колёсиком (AutoScroll работает сам)
             }
         }
-
 
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            if (bitmap != null)
-                e.Graphics.DrawImage(bitmap, 0, 0);
 
-            var main = MdiParent as MainForm;
-            if (main == null || !isDrawing || !startPoint.HasValue) return;
+            if (bitmap == null) return;
 
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Graphics g = e.Graphics;
+            g.Clear(this.BackColor);
+            g.TranslateTransform(viewOffset.X, viewOffset.Y);
+            g.ScaleTransform(zoom, zoom);
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
 
-            switch (main.Tool)
+
+            g.DrawImage(bitmap, 0, 0);
+
+            if (isDrawing && startImage.HasValue)
             {
-                case Tools.Line:
-                    e.Graphics.DrawLine(new Pen(MainForm.Color, MainForm.Width), startPoint.Value, currentPos);
-                    break;
+                var main = MdiParent as MainForm;
+                if (main == null) return;
 
-                case Tools.Ellipse:
-                    var rect = GetNormalizedRect(startPoint.Value, currentPos);
-                    if (rect.Width > 0 && rect.Height > 0)
-                    {
-                        if (main.FilledShapes)
-                            e.Graphics.FillEllipse(new SolidBrush(MainForm.Color), rect);
-                        else
-                            e.Graphics.DrawEllipse(new Pen(MainForm.Color, MainForm.Width), rect);
-                    }
-                    break;
+                Pen p = new Pen(MainForm.Color, MainForm.Width / zoom)
+                {
+                    DashStyle = DashStyle.Solid
+                };
+
+                switch (main.Tool)
+                {
+                    case Tools.Pencil:
+                    case Tools.Line:
+                        g.DrawLine(p, startImage.Value, currentImage);
+                        break;
+                    case Tools.Ellipse:
+                        var r = GetRectFromPoints(startImage.Value, currentImage);
+                        g.DrawEllipse(p, r);
+                        break;
+                    case Tools.Eraser:
+                    case Tools.Fill:
+                    case Tools.Text:
+                        break;
+                    case Tools.Arrow:
+                        float previewThickness = MainForm.Width;           // или можно фиксированную, например 20–40
+                        DrawThickArrow(g, startImage.Value, currentImage, previewThickness, MainForm.Color, main.FilledShapes);
+                        break;
+                }
+                p.Dispose();
             }
         }
 
-        
+        private PointF ScreenToImage(Point screenPt)
+        {
+            return new PointF(
+                (screenPt.X - viewOffset.X) / zoom,
+                (screenPt.Y - viewOffset.Y) / zoom
+            );
+        }
+
+        public void ResetView()
+        {
+            zoom = 1.0f;
+            viewOffset = new PointF(0, 0);
+            UpdateScrollbars();
+            Invalidate();
+        }
 
 
     }
 }
+

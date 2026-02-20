@@ -293,5 +293,31 @@ namespace MDIPaint
                 // очистить статус
             }
         }
+
+        private void zoomInBtn_Click(object sender, EventArgs e)
+        {
+            if (ActiveMdiChild is DocumentForm doc)
+                doc.ZoomIn();
+        }
+
+        private void zoomOutBtn_Click(object sender, EventArgs e)
+        {
+            if (ActiveMdiChild is DocumentForm doc)
+                doc.ZoomOut();
+        }
+
+        private void resetViewBtn_Click(object sender, EventArgs e)
+        {
+            if (ActiveMdiChild is DocumentForm doc)
+            {
+                doc.ResetView();
+            }
+        }
+
+        private void arrowBtn_Click(object sender, EventArgs e)
+        {
+            Tool = Tools.Arrow;
+            SetTool(Tool);
+        }
     }
 }

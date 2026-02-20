@@ -72,6 +72,7 @@
             this.sslCursorPos = new System.Windows.Forms.ToolStripStatusLabel();
             this.sslImageSize = new System.Windows.Forms.ToolStripStatusLabel();
             this.sslTool = new System.Windows.Forms.ToolStripStatusLabel();
+            this.resetViewBtn = new System.Windows.Forms.ToolStripButton();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -247,7 +248,8 @@
             this.arrowBtn,
             this.toolStripSeparator5,
             this.zoomInBtn,
-            this.zoomOutBtn});
+            this.zoomOutBtn,
+            this.resetViewBtn});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(800, 25);
@@ -312,7 +314,6 @@
             // 
             // brushSizeTextBox
             // 
-            this.brushSizeTextBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.brushSizeTextBox.Name = "brushSizeTextBox";
             this.brushSizeTextBox.Size = new System.Drawing.Size(100, 25);
             this.brushSizeTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.brushSizeTextBox_KeyPress);
@@ -391,6 +392,7 @@
             this.arrowBtn.Name = "arrowBtn";
             this.arrowBtn.Size = new System.Drawing.Size(23, 22);
             this.arrowBtn.Text = "Стрелка";
+            this.arrowBtn.Click += new System.EventHandler(this.arrowBtn_Click);
             // 
             // toolStripSeparator5
             // 
@@ -404,7 +406,8 @@
             this.zoomInBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.zoomInBtn.Name = "zoomInBtn";
             this.zoomInBtn.Size = new System.Drawing.Size(23, 22);
-            this.zoomInBtn.Text = "Уменьшить";
+            this.zoomInBtn.Text = "Увеличить";
+            this.zoomInBtn.Click += new System.EventHandler(this.zoomInBtn_Click);
             // 
             // zoomOutBtn
             // 
@@ -413,7 +416,8 @@
             this.zoomOutBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.zoomOutBtn.Name = "zoomOutBtn";
             this.zoomOutBtn.Size = new System.Drawing.Size(23, 22);
-            this.zoomOutBtn.Text = "Увеличить";
+            this.zoomOutBtn.Text = "Уменьшить";
+            this.zoomOutBtn.Click += new System.EventHandler(this.zoomOutBtn_Click);
             // 
             // checkBox1
             // 
@@ -455,6 +459,16 @@
             this.sslTool.Name = "sslTool";
             this.sslTool.Size = new System.Drawing.Size(74, 17);
             this.sslTool.Text = "Инструмент";
+            // 
+            // resetViewBtn
+            // 
+            this.resetViewBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.resetViewBtn.Image = ((System.Drawing.Image)(resources.GetObject("resetViewBtn.Image")));
+            this.resetViewBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.resetViewBtn.Name = "resetViewBtn";
+            this.resetViewBtn.Size = new System.Drawing.Size(23, 22);
+            this.resetViewBtn.Text = "Сбросить масштаб";
+            this.resetViewBtn.Click += new System.EventHandler(this.resetViewBtn_Click);
             // 
             // MainForm
             // 
@@ -528,6 +542,7 @@
         private System.Windows.Forms.ToolStripStatusLabel sslCursorPos;
         private System.Windows.Forms.ToolStripStatusLabel sslImageSize;
         private System.Windows.Forms.ToolStripStatusLabel sslTool;
+        private System.Windows.Forms.ToolStripButton resetViewBtn;
     }
 }
 

@@ -15,5 +15,6 @@ namespace MDIPaint
         Fill = 4,
         Text = 5,
         Arrow = 6,
+        Rectangle = 7,
     }
 }
