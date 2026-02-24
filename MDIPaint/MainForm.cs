@@ -37,8 +37,6 @@ namespace MDIPaint
 
             if (sslTool != null)
                 sslTool.Text = $"Инструмент: {tool}";
-
-            // можно четвёртую панель для * или "Изменён"
         }
 
         private void выходToolStripMenuItem_Click(object sender, EventArgs e)
@@ -286,7 +284,6 @@ namespace MDIPaint
             if (ActiveMdiChild is DocumentForm doc)
             {
                 UpdateStatus(0, 0, doc.Image.Width, doc.Image.Height, Tool, doc.IsDirty);
-                // + обновить курсор и т.д.
             }
             else
             {
@@ -318,6 +315,11 @@ namespace MDIPaint
         {
             Tool = Tools.Arrow;
             SetTool(Tool);
+        }
+
+        private void sslImageSize_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

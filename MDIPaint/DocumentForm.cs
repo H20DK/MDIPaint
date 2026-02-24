@@ -18,6 +18,15 @@ namespace MDIPaint
 {
     public partial class DocumentForm : Form
     {
+        private PointF? lastEraserPos = null;
+        // Для стабилизации карандаша
+        private PointF lastCommittedPoint;      // последняя зафиксированная точка на холсте
+        private PointF currentSmoothedPosition; // текущая "целевая" сглаженная позиция
+        private bool isStabilizing = false;
+        private const float STABILIZATION_FACTOR = 0.18f;  // 0.08 .. 0.35 — основной параметр (меньше = плавнее, но больше задержка)
+        private const float MIN_MOVE_DISTANCE = 1.2f;      // минимальное расстояние для фиксации новой точки
+
+        private List<PointF> pencilPoints = new List<PointF>();
         private PointF? startImage = null;
         private PointF currentImage = new PointF();
         private string pendingText = null;
@@ -35,8 +44,6 @@ namespace MDIPaint
         private const float MIN_ZOOM = 0.25f;
         private const float MAX_ZOOM = 8.0f;
 
-
-        public int EraserRadius { get; set; } = 8;
         public string FilePath { get; private set; } = null;   // null = новый документ
         public bool IsDirty { get; private set; } = false;     // был ли изменён рисунок        
         public Bitmap Image => bitmap;
@@ -280,14 +287,14 @@ namespace MDIPaint
 
             if (ext == ".jpg" || ext == ".jpeg") format = ImageFormat.Jpeg;
             else if (ext == ".bmp") format = ImageFormat.Bmp;
-            else format = ImageFormat.Png;   // по умолчанию png
+            else format = ImageFormat.Png;
 
             try
             {
                 bitmap.Save(pathToSave, format);
                 FilePath = pathToSave;
                 IsDirty = false;
-                Text = Path.GetFileName(pathToSave);   // красивое имя окна
+                Text = Path.GetFileName(pathToSave);
                 return true;
             }
             catch (Exception ex)
@@ -341,12 +348,61 @@ namespace MDIPaint
             switch (main.Tool)
             {
                 case Tools.Pencil:
+                    if (imgPt.X < 0 || imgPt.Y < 0 || imgPt.X >= bitmap.Width || imgPt.Y >= bitmap.Height)
+                        break;
+
+                    lastCommittedPoint = imgPt;
+                    currentSmoothedPosition = imgPt;
+                    isStabilizing = true;
+
+                    using (var g = Graphics.FromImage(bitmap))
+                    {
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        float w = Math.Max(1f, MainForm.Width);
+                        using (var brush = new SolidBrush(MainForm.Color))
+                        {
+                            g.FillEllipse(brush, imgPt.X - w / 2, imgPt.Y - w / 2, w, w);
+                        }
+                    }
+                    IsDirty = true;
+                    Invalidate();
                     break;
                 case Tools.Line:
                     break;
                 case Tools.Ellipse:
                     break;
                 case Tools.Eraser:
+                    if (e.Button != MouseButtons.Left) break;
+
+                    // Проверяем, что попали в изображение
+                    if (imgPt.X < 0 || imgPt.Y < 0 ||
+                        imgPt.X >= bitmap.Width || imgPt.Y >= bitmap.Height)
+                        break;
+
+                    float diameter = MainForm.Width;
+                    float radius = diameter / 2f;
+                    radius = Math.Max(2f, radius);
+
+                    using (var g = Graphics.FromImage(bitmap))
+                    {
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                        using (var brush = new SolidBrush(Color.White))
+                        {
+                            g.FillEllipse(brush,
+                                imgPt.X - radius,
+                                imgPt.Y - radius,
+                                diameter,
+                                diameter);
+                        }
+                    }
+
+                    lastEraserPos = imgPt;
+                    IsDirty = true;
+                    Invalidate();
+
+                    startImage = imgPt;
+                    isDrawing = true;
                     break;
                 case Tools.Fill:
                     if (e.Button == MouseButtons.Left)
@@ -431,33 +487,67 @@ namespace MDIPaint
             var main = MdiParent as MainForm;
             if (main == null) return;
 
-            using (var g = Graphics.FromImage(bitmap))
+            switch (main.Tool)
             {
-                switch (main.Tool)
-                {
-                    case Tools.Pencil:
-                    case Tools.Line:
+                case Tools.Pencil:
+                    if (isStabilizing && startImage.HasValue)
+                    {
+                        if (currentSmoothedPosition != lastCommittedPoint)
+                        {
+                            using (var g = Graphics.FromImage(bitmap))
+                            {
+                                g.SmoothingMode = SmoothingMode.AntiAlias;
+                                float w = Math.Max(1f, MainForm.Width);
+                                using (var pen = new Pen(MainForm.Color, w))
+                                {
+                                    pen.StartCap = LineCap.Round;
+                                    pen.EndCap = LineCap.Round;
+                                    pen.LineJoin = LineJoin.Round;
+                                    g.DrawLine(pen, lastCommittedPoint, currentSmoothedPosition);
+                                }
+                            }
+                            IsDirty = true;
+                            Invalidate();
+                        }
+
+                        isStabilizing = false;
+                        startImage = null;
+                    }
+                    break;
+                case Tools.Line:
+                    using (var g = Graphics.FromImage(bitmap))
+                    {
                         g.DrawLine(new Pen(MainForm.Color, MainForm.Width), startImage.Value, currentImage);
-                        break;
-                    case Tools.Ellipse:
+                    }
+                    break;
+                case Tools.Ellipse:
+                    using (var g = Graphics.FromImage(bitmap))
+                    {
                         var rect = GetRectFromPoints(startImage.Value, currentImage);
                         if (main.FilledShapes)
                             g.FillEllipse(new SolidBrush(MainForm.Color), rect);
                         else
                             g.DrawEllipse(new Pen(MainForm.Color, MainForm.Width), rect);
-                        break;
-                    case Tools.Eraser:
-                    case Tools.Fill:
-                    case Tools.Text:                        
-                        break;
-                    case Tools.Arrow:
+                    }
+                    break;
+                case Tools.Eraser:
+                    lastEraserPos = null;
+                    break;
+                case Tools.Fill:
+                    break;
+                case Tools.Text:                        
+                    break;
+                case Tools.Arrow:
+                    using (var g = Graphics.FromImage(bitmap))
+                    {
                         float finalThickness = MainForm.Width * 1.5f;     // можно умножить, чтобы стрелка была толще
                                                                           // или просто MainForm.Width, если толщина уже достаточная
 
                         DrawThickArrow(g, startImage.Value, currentImage, finalThickness, MainForm.Color, main.FilledShapes);
-                        break;
-                }
+                    }
+                    break;
             }
+            
             startImage = null;
             IsDirty = true;
             Invalidate();
@@ -478,19 +568,46 @@ namespace MDIPaint
             switch (main.Tool)
             {
                 case Tools.Pencil:
-                    if (startImage.HasValue)
+                    if (!isStabilizing) break;
+
+                    PointF target = imgPt;  // куда хочет попасть пользователь прямо сейчас
+
+                    // Экспоненциальное сглаживание (очень простая и быстрая формула)
+                    currentSmoothedPosition = new PointF(
+                        currentSmoothedPosition.X + (target.X - currentSmoothedPosition.X) * STABILIZATION_FACTOR,
+                        currentSmoothedPosition.Y + (target.Y - currentSmoothedPosition.Y) * STABILIZATION_FACTOR
+                    );
+
+                    // Рисуем только если сглаженная точка достаточно далеко от последней зафиксированной
+                    float distance = (float)Math.Sqrt(
+                        Math.Pow(currentSmoothedPosition.X - lastCommittedPoint.X, 2) +
+                        Math.Pow(currentSmoothedPosition.Y - lastCommittedPoint.Y, 2));
+
+                    if (distance >= MIN_MOVE_DISTANCE)
                     {
                         using (var g = Graphics.FromImage(bitmap))
                         {
-                            g.DrawLine(
-                                new Pen(MainForm.Color, MainForm.Width),
-                                startImage.Value, currentImage
-                            );
+                            g.SmoothingMode = SmoothingMode.AntiAlias;
+                            g.CompositingQuality = CompositingQuality.HighQuality;
+
+                            float penWidth = Math.Max(1f, MainForm.Width);
+
+                            using (var pen = new Pen(MainForm.Color, penWidth))
+                            {
+                                pen.StartCap = LineCap.Round;
+                                pen.EndCap = LineCap.Round;
+                                pen.LineJoin = LineJoin.Round;
+                                g.DrawLine(pen, lastCommittedPoint, currentSmoothedPosition);
+                            }
                         }
-                        startImage = currentImage;
+
+                        lastCommittedPoint = currentSmoothedPosition;
                         IsDirty = true;
                         Invalidate();
                     }
+
+                    // Можно дополнительно показывать "резиновую" линию до текущей цели (опционально)
+                     currentImage = target;   // если хочешь показывать предпросмотр до мыши
                     break;
                 case Tools.Line:
                     Invalidate();
@@ -499,17 +616,39 @@ namespace MDIPaint
                     Invalidate();
                     break;
                 case Tools.Eraser:
-                    if (e.Button == MouseButtons.Left)
+                    if (e.Button != MouseButtons.Left) break;
+
+                    float eraserSize = MainForm.Width;
+                    float eraserRadius = eraserSize / 2f;
+                    float effectiveRadius = Math.Max(2f, eraserRadius);
+
+                    using (var g = Graphics.FromImage(bitmap))
                     {
-                        using (var g = Graphics.FromImage(bitmap))
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.CompositingQuality = CompositingQuality.HighQuality;
+
+                        using (var brush = new SolidBrush(Color.White))
                         {
-                            using (var brush = new SolidBrush(Color.White)) // или другой фон
+                            // Рисуем круг в текущей позиции
+                            g.FillEllipse(brush,
+                                imgPt.X - effectiveRadius,
+                                imgPt.Y - effectiveRadius,
+                                effectiveRadius * 2,
+                                effectiveRadius * 2);
+
+                            if (lastEraserPos.HasValue)
                             {
-                                g.FillEllipse(brush, imgPt.X - EraserRadius, imgPt.Y - EraserRadius,
-                                                   EraserRadius * 2, EraserRadius * 2);
+                                using (var pen = new Pen(Color.White, effectiveRadius * 2))
+                                {
+                                    pen.StartCap = LineCap.Round;
+                                    pen.EndCap = LineCap.Round;
+                                    g.DrawLine(pen, lastEraserPos.Value, imgPt);
+                                }
                             }
                         }
                     }
+
+                    lastEraserPos = imgPt;
                     IsDirty = true;
                     Invalidate();
                     break;
@@ -638,7 +777,7 @@ namespace MDIPaint
                 var main = MdiParent as MainForm;
                 if (main == null) return;
 
-                Pen p = new Pen(MainForm.Color, MainForm.Width / zoom)
+                Pen p = new Pen(MainForm.Color, MainForm.Width )
                 {
                     DashStyle = DashStyle.Solid
                 };
@@ -646,6 +785,7 @@ namespace MDIPaint
                 switch (main.Tool)
                 {
                     case Tools.Pencil:
+                        break;
                     case Tools.Line:
                         g.DrawLine(p, startImage.Value, currentImage);
                         break;

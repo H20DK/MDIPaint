@@ -67,12 +67,12 @@
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomInBtn = new System.Windows.Forms.ToolStripButton();
             this.zoomOutBtn = new System.Windows.Forms.ToolStripButton();
+            this.resetViewBtn = new System.Windows.Forms.ToolStripButton();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.sslCursorPos = new System.Windows.Forms.ToolStripStatusLabel();
             this.sslImageSize = new System.Windows.Forms.ToolStripStatusLabel();
             this.sslTool = new System.Windows.Forms.ToolStripStatusLabel();
-            this.resetViewBtn = new System.Windows.Forms.ToolStripButton();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -314,6 +314,7 @@
             // 
             // brushSizeTextBox
             // 
+            this.brushSizeTextBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.brushSizeTextBox.Name = "brushSizeTextBox";
             this.brushSizeTextBox.Size = new System.Drawing.Size(100, 25);
             this.brushSizeTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.brushSizeTextBox_KeyPress);
@@ -419,6 +420,16 @@
             this.zoomOutBtn.Text = "Уменьшить";
             this.zoomOutBtn.Click += new System.EventHandler(this.zoomOutBtn_Click);
             // 
+            // resetViewBtn
+            // 
+            this.resetViewBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.resetViewBtn.Image = ((System.Drawing.Image)(resources.GetObject("resetViewBtn.Image")));
+            this.resetViewBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.resetViewBtn.Name = "resetViewBtn";
+            this.resetViewBtn.Size = new System.Drawing.Size(23, 22);
+            this.resetViewBtn.Text = "Сбросить масштаб";
+            this.resetViewBtn.Click += new System.EventHandler(this.resetViewBtn_Click);
+            // 
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
@@ -453,22 +464,13 @@
             this.sslImageSize.Name = "sslImageSize";
             this.sslImageSize.Size = new System.Drawing.Size(86, 17);
             this.sslImageSize.Text = "Размер холста";
+            this.sslImageSize.Click += new System.EventHandler(this.sslImageSize_Click);
             // 
             // sslTool
             // 
             this.sslTool.Name = "sslTool";
             this.sslTool.Size = new System.Drawing.Size(74, 17);
             this.sslTool.Text = "Инструмент";
-            // 
-            // resetViewBtn
-            // 
-            this.resetViewBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.resetViewBtn.Image = ((System.Drawing.Image)(resources.GetObject("resetViewBtn.Image")));
-            this.resetViewBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.resetViewBtn.Name = "resetViewBtn";
-            this.resetViewBtn.Size = new System.Drawing.Size(23, 22);
-            this.resetViewBtn.Text = "Сбросить масштаб";
-            this.resetViewBtn.Click += new System.EventHandler(this.resetViewBtn_Click);
             // 
             // MainForm
             // 
