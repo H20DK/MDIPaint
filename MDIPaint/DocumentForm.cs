@@ -18,19 +18,20 @@ namespace MDIPaint
 {
     public partial class DocumentForm : Form
     {
+        private Point? middleButtonDownPos = null;  // экранные координаты нажатия средней кнопки
+        private PointF originalViewOffsetAtMiddleDown;  // viewOffset на момент нажатия
         private PointF? lastEraserPos = null;
         // Для стабилизации карандаша
-        private PointF lastCommittedPoint;      // последняя зафиксированная точка на холсте
-        private PointF currentSmoothedPosition; // текущая "целевая" сглаженная позиция
+        private PointF lastCommittedPoint;
+        private PointF currentSmoothedPosition;
         private bool isStabilizing = false;
-        private const float STABILIZATION_FACTOR = 0.18f;  // 0.08 .. 0.35 — основной параметр (меньше = плавнее, но больше задержка)
-        private const float MIN_MOVE_DISTANCE = 1.2f;      // минимальное расстояние для фиксации новой точки
+        private const float STABILIZATION_FACTOR = 0.18f; 
+        private const float MIN_MOVE_DISTANCE = 1.2f;
 
-        private List<PointF> pencilPoints = new List<PointF>();
+
         private PointF? startImage = null;
         private PointF currentImage = new PointF();
         private string pendingText = null;
-        private Point textPos;
         private Cursor pencilCursor;
         private Cursor eraserCursor;
         private Cursor bucketCursor;
@@ -111,7 +112,7 @@ namespace MDIPaint
 
             if (mouseLocation.HasValue)
             {
-                // Зум относительно точки под курсором (самый удобный вариант)
+                // Зум относительно точки под курсором
                 Point pt = mouseLocation.Value;
                 float dx = pt.X - viewOffset.X;
                 float dy = pt.Y - viewOffset.Y;
@@ -172,7 +173,7 @@ namespace MDIPaint
             }
             else if (result == DialogResult.Yes)
             {
-                if (!Save()) // твой метод Save
+                if (!Save())
                     e.Cancel = true;
             }
         }
@@ -214,7 +215,6 @@ namespace MDIPaint
             return defaultCursor;
         }
 
-        // Использование в UpdateCursor
         public void UpdateCursor(Tools tool)
         {
             switch (tool)
@@ -236,8 +236,6 @@ namespace MDIPaint
                     break;
             }
         }
-
-
 
         public void ResizeCanvas(int newWidth, int newHeight)
         {
@@ -327,6 +325,13 @@ namespace MDIPaint
 
         private void DocumentForm_MouseDown(object sender, MouseEventArgs e)
         {
+            if (e.Button == MouseButtons.Middle)
+            {
+                middleButtonDownPos = e.Location;
+                originalViewOffsetAtMiddleDown = viewOffset;
+                this.Cursor = Cursors.SizeAll;
+            }
+
             if (e.Button != MouseButtons.Left) return;
 
             var main = MdiParent as MainForm;
@@ -335,11 +340,8 @@ namespace MDIPaint
             PointF imgPt = ScreenToImage(e.Location);
 
             // Проверяем, попали ли в изображение
-            if (imgPt.X < 0 || imgPt.Y < 0 ||
-                imgPt.X >= bitmap.Width || imgPt.Y >= bitmap.Height)
-            {
+            if (imgPt.X < 0 || imgPt.Y < 0 || imgPt.X >= bitmap.Width || imgPt.Y >= bitmap.Height)
                 return;
-            }
 
             startImage = imgPt;
             currentImage = imgPt;
@@ -460,7 +462,7 @@ namespace MDIPaint
                                 Invalidate();
                                 using (var g = Graphics.FromImage(bitmap))
                                 {
-                                    using (var font = new Font("Arial", 14))
+                                    using (var font = new Font("Arial", MainForm.Width))
                                     using (var brush = new SolidBrush(MainForm.Color))
                                     {
                                         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
@@ -474,7 +476,15 @@ namespace MDIPaint
                     }
                     break;
                 case Tools.Arrow:
-                    break;                    
+                    PointF pt = ScreenToImage(e.Location);
+                    if (pt.X < 0 || pt.Y < 0 || pt.X >= bitmap.Width || pt.Y >= bitmap.Height)
+                        break;
+
+                    startImage = pt;
+                    currentImage = pt;
+                    isDrawing = true;
+                    Invalidate();
+                    break;
             }
         }
             
@@ -482,10 +492,17 @@ namespace MDIPaint
 
         private void DocumentForm_MouseUp(object sender, MouseEventArgs e)
         {
-            if (!isDrawing || !startImage.HasValue) return;
-
             var main = MdiParent as MainForm;
             if (main == null) return;
+
+            if (e.Button == MouseButtons.Middle)
+            {
+                middleButtonDownPos = null;
+            }
+            UpdateCursor(main.Tool);
+            if (!isDrawing || !startImage.HasValue) return;
+
+            
 
             switch (main.Tool)
             {
@@ -556,6 +573,22 @@ namespace MDIPaint
 
         private void DocumentForm_MouseMove(object sender, MouseEventArgs e)
         {
+            if (middleButtonDownPos.HasValue && e.Button == MouseButtons.Middle)
+            {
+                // Разница в экранных координатах
+                int dx = e.X - middleButtonDownPos.Value.X;
+                int dy = e.Y - middleButtonDownPos.Value.Y;
+
+                // Сдвигаем viewOffset в противоположную сторону (как будто тянем бумагу)
+                viewOffset = new PointF(
+                    originalViewOffsetAtMiddleDown.X + dx,
+                    originalViewOffsetAtMiddleDown.Y + dy
+                );
+
+                UpdateScrollbars();     // важно! обновляем AutoScrollMinSize
+                Invalidate();           // перерисовываем
+            }
+
             var main = MdiParent as MainForm;
             if (main == null) return;
 
@@ -655,6 +688,10 @@ namespace MDIPaint
                 case Tools.Fill:
                 case Tools.Text:
                 case Tools.Arrow:
+                    if(isDrawing)
+                    {
+                        Invalidate();           // ← это главное
+                    }
                     break;
             }
         }
@@ -672,7 +709,6 @@ namespace MDIPaint
         private void DrawThickArrow(Graphics g, PointF start, PointF end, float thickness, Color color, bool filled)
         {
             if (start == end) return;
-
             // Направление стрелки
             float dx = end.X - start.X;
             float dy = end.Y - start.Y;
@@ -697,8 +733,8 @@ namespace MDIPaint
             PointF D = new PointF(end.X + px * halfTh, end.Y + py * halfTh);
 
             // Точки наконечника
-            float headLength = thickness * 2.5f;           // длина наконечника ≈ 2.5 × толщина
-            float headWidth = thickness * 2.2f;           // ширина основания наконечника
+            float headLength = thickness * 2.5f;    // длина наконечника  2.5 толщины
+            float headWidth = thickness * 2.2f;     // ширина основания наконечника 2.2 толщины
 
             PointF tip = new PointF(
                 end.X + ux * headLength,
@@ -714,14 +750,10 @@ namespace MDIPaint
                 end.Y - py * headWidth / 2
             );
 
-            // Соединяем точки наконечника с телом
-            PointF connectLeft = new PointF(C.X + (left.X - C.X) * 0.3f, C.Y + (left.Y - C.Y) * 0.3f);
-            PointF connectRight = new PointF(D.X + (right.X - D.X) * 0.3f, D.Y + (right.Y - D.Y) * 0.3f);
-
             // Массив точек для полигона
             PointF[] points = new PointF[]
             {
-        A, B, C, connectRight, right, tip, left, connectLeft, D, A
+                A, B, C, right, tip, left, D,
             };
 
             using (var pen = new Pen(color, 1f))
@@ -733,8 +765,6 @@ namespace MDIPaint
                         g.FillPolygon(brush, points);
                     }
                 }
-
-                // Контур всегда рисуем (чтобы была граница)
                 g.DrawPolygon(pen, points);
             }
         }
@@ -794,11 +824,13 @@ namespace MDIPaint
                         g.DrawEllipse(p, r);
                         break;
                     case Tools.Eraser:
+                        break;
                     case Tools.Fill:
+                        break;
                     case Tools.Text:
                         break;
                     case Tools.Arrow:
-                        float previewThickness = MainForm.Width;           // или можно фиксированную, например 20–40
+                        float previewThickness = MainForm.Width;
                         DrawThickArrow(g, startImage.Value, currentImage, previewThickness, MainForm.Color, main.FilledShapes);
                         break;
                 }

@@ -36,7 +36,39 @@ namespace MDIPaint
                 sslImageSize.Text = $"Размер: {w} × {h}";
 
             if (sslTool != null)
-                sslTool.Text = $"Инструмент: {tool}";
+            {
+                string toolName;
+
+                switch (tool)
+                {
+                    case Tools.Pencil:
+                        toolName = "Карандаш";
+                        break;
+                    case Tools.Line:
+                        toolName = "Линия";
+                        break;
+                    case Tools.Ellipse:
+                        toolName = "Эллипс";
+                        break;
+                    case Tools.Eraser:
+                        toolName = "Ластик";
+                        break;
+                    case Tools.Fill:
+                        toolName = "Заливка";
+                        break;
+                    case Tools.Text:
+                        toolName = "Текст";
+                        break;
+                    case Tools.Arrow:
+                        toolName = "Стрелка";
+                        break;
+                    default:
+                        toolName = tool.ToString();
+                        break;
+                }
+
+                sslTool.Text = $"Инструмент: {toolName}";
+            }
         }
 
         private void выходToolStripMenuItem_Click(object sender, EventArgs e)
@@ -203,7 +235,6 @@ namespace MDIPaint
 
         private void brushSizeTextBox_TextChanged(object sender, EventArgs e)
         {
-            // Дополнительная страховка для случаев вставки из буфера обмена
             if (brushSizeTextBox.Text.StartsWith("0") && brushSizeTextBox.Text.Length > 1)
             {
                 brushSizeTextBox.Text = brushSizeTextBox.Text.TrimStart('0');
@@ -284,10 +315,6 @@ namespace MDIPaint
             if (ActiveMdiChild is DocumentForm doc)
             {
                 UpdateStatus(0, 0, doc.Image.Width, doc.Image.Height, Tool, doc.IsDirty);
-            }
-            else
-            {
-                // очистить статус
             }
         }
 
