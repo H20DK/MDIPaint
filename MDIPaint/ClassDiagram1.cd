@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MDIPaint.AboutForm" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kIAAAAgAACAgCAUAAACAAAADAAAAEIAAAAAAAAAAAAA=</HashCode>
+      <FileName>AboutForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MDIPaint.CanvasSizeForm" Collapsed="true">
+    <Position X="0.5" Y="3" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAkAAQABiAAABECACCAAMQCAAAAAEAAYAAAAAAAAAA=</HashCode>
+      <FileName>CanvasSizeForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MDIPaint.DocumentForm">
+    <Position X="8.5" Y="0.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>YAHBAJMAACsAAECAADGBUDAK4MCBABCAAADRAEAYBAA=</HashCode>
+      <FileName>DocumentForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MDIPaint.MainForm">
+    <Position X="5.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>44yJID2OICpEAgs6gciACEW7AAEwOAAAIBAVuAUJJAE=</HashCode>
+      <FileName>MainForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MDIPaint.Program" Collapsed="true">
+    <Position X="3.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MDIPaint.Properties.Resources" Collapsed="true">
+    <Position X="5.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAABEAAAAQAAAAAAAAAAAAAAAIA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MDIPaint.Properties.Settings" Collapsed="true">
+    <Position X="2.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="MDIPaint.Tools" Collapsed="true">
+    <Position X="2.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAAgAAAAAAAACAAACAAAAAgACAABAAA=</HashCode>
+      <FileName>Tools.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -19,25 +19,25 @@ namespace MDIPaint
     public partial class DocumentForm : Form
     {
         private Point? middleButtonDownPos = null;  // экранные координаты нажатия средней кнопки
-        private PointF originalViewOffsetAtMiddleDown;  // viewOffset на момент нажатия
+        private PointF originalViewOffsetAtMiddleDown;  // Значение сдвига картинки  в момент нажатия средней кнопки
         private PointF? lastEraserPos = null;
         // Для стабилизации карандаша
         private PointF lastCommittedPoint;
         private PointF currentSmoothedPosition;
         private bool isStabilizing = false;
-        private const float STABILIZATION_FACTOR = 0.18f; 
-        private const float MIN_MOVE_DISTANCE = 1.2f;
+        private const float STABILIZATION_FACTOR = 0.18f;  // скорость сглаживания
+        private const float MIN_MOVE_DISTANCE = 1.2f; // Минимальное расстояние, на которое должна сдвинуться сглаженная точка, чтобы нарисовать новый отрезок
 
 
         private PointF? startImage = null;
         private PointF currentImage = new PointF();
-        private string pendingText = null;
+        private string pendingText = null; // Текст, который пользователь ввёл, но ещё не нарисован на холсте
         private Cursor pencilCursor;
         private Cursor eraserCursor;
         private Cursor bucketCursor;
         private Cursor textCursor;
         private Bitmap bitmap;
-        private bool isDrawing = false;
+        private bool isDrawing = false; // зажата ли сейчас левая кнопка мыши и идёт ли рисование
 
         private float zoom = 1.0f;
         private PointF viewOffset = new PointF(0, 0);
@@ -690,7 +690,7 @@ namespace MDIPaint
                 case Tools.Arrow:
                     if(isDrawing)
                     {
-                        Invalidate();           // ← это главное
+                        Invalidate();
                     }
                     break;
             }
