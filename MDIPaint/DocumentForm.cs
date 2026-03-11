@@ -462,7 +462,7 @@ namespace MDIPaint
                                 Invalidate();
                                 using (var g = Graphics.FromImage(bitmap))
                                 {
-                                    using (var font = new Font("Arial", MainForm.Width))
+                                    using (var font = new System.Drawing.Font("Arial", MainForm.Width))
                                     using (var brush = new SolidBrush(MainForm.Color))
                                     {
                                         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;

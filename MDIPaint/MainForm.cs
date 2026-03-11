@@ -16,9 +16,13 @@ namespace MDIPaint
 {
     public partial class MainForm : Form
     {
+
         public static Color Color { get; set; }
         public static new int Width { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Tools Tool { get; set; }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool FilledShapes { get; set; } = false;
         Dictionary<string, IPlugin> plugins = new Dictionary<string, IPlugin>();
 
@@ -371,7 +375,7 @@ namespace MDIPaint
             foreach (string file in files)
                 try
                 {
-                    Assembly assembly = Assembly.LoadFrom(file);
+                    Assembly assembly = Assembly.LoadFile(file);
 
                     foreach (Type type in assembly.GetTypes())
                     {
@@ -384,24 +388,12 @@ namespace MDIPaint
                         }
                     }
                 }
-                catch (ReflectionTypeLoadException ex)
-                {
-                    // Специальная обработка для ошибок загрузки типов
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendLine($"Ошибка загрузки плагина {Path.GetFileName(file)}:");
-
-                    foreach (Exception loaderEx in ex.LoaderExceptions)
-                    {
-                        sb.AppendLine($"- {loaderEx.Message}");
-                    }
-
-                    MessageBox.Show(sb.ToString());
-                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Ошибка загрузки плагина {Path.GetFileName(file)}:\n{ex.Message}");
+                    MessageBox.Show("Ошибка загрузки плагина\n" + ex.Message);
                 }
         }
+
         private void CreatePluginsMenu()
         {
             foreach (var p in plugins)
