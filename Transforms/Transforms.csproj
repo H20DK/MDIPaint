@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PluginInterface\PluginInterface.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="PluginInterface">
+      <HintPath>..\PluginInterface\bin\Debug\net10.0\PluginInterface.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

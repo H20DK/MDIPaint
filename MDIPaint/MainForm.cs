@@ -4,10 +4,13 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using PluginInterface;
 
 namespace MDIPaint
 {
@@ -17,10 +20,13 @@ namespace MDIPaint
         public static new int Width { get; set; }
         public Tools Tool { get; set; }
         public bool FilledShapes { get; set; } = false;
+        Dictionary<string, IPlugin> plugins = new Dictionary<string, IPlugin>();
 
         public MainForm()
         {
             InitializeComponent();
+            FindPlugins();
+            CreatePluginsMenu();
             Color = Color.Black;
             Width = 3;
             Tool = Tools.Pencil;
@@ -348,5 +354,74 @@ namespace MDIPaint
         {
 
         }
+
+        private void фильтрыToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        void FindPlugins()
+        {
+            // папка с плагинами
+            string folder = System.AppDomain.CurrentDomain.BaseDirectory;
+
+            // dll-файлы в этой папке
+            string[] files = Directory.GetFiles(folder, "*.dll");
+
+            foreach (string file in files)
+                try
+                {
+                    Assembly assembly = Assembly.LoadFrom(file);
+
+                    foreach (Type type in assembly.GetTypes())
+                    {
+                        Type iface = type.GetInterface(nameof(PluginInterface.IPlugin));
+
+                        if (iface != null)
+                        {
+                            IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
+                            plugins.Add(plugin.Name, plugin);
+                        }
+                    }
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    // Специальная обработка для ошибок загрузки типов
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"Ошибка загрузки плагина {Path.GetFileName(file)}:");
+
+                    foreach (Exception loaderEx in ex.LoaderExceptions)
+                    {
+                        sb.AppendLine($"- {loaderEx.Message}");
+                    }
+
+                    MessageBox.Show(sb.ToString());
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка загрузки плагина {Path.GetFileName(file)}:\n{ex.Message}");
+                }
+        }
+        private void CreatePluginsMenu()
+        {
+            foreach (var p in plugins)
+            {
+                var item = фильтрыToolStripMenuItem.DropDownItems.Add(p.Value.Name);
+                item.Click += OnPluginClick;
+            }
+        }
+
+        private void OnPluginClick(object sender, EventArgs args)
+        {
+            IPlugin plugin = plugins[((ToolStripMenuItem)sender).Text];
+            if (ActiveMdiChild is DocumentForm activeDoc)
+            {
+                plugin.Transform((Bitmap)activeDoc.Image);
+                activeDoc.Refresh();
+            }
+        }
+
+
+
     }
 }
