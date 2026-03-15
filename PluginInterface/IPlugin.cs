@@ -9,7 +9,12 @@ namespace PluginInterface
     {
         string Name { get; }
         string Author { get; }
-        void Transform(Bitmap bitmap);
 
+        void Transform(
+            PluginContext context,
+            IProgress<int>? progress = null,
+            IProgress<string>? status = null,
+            CancellationToken cancellationToken = default
+        );
     }
 }

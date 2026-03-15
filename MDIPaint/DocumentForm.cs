@@ -46,8 +46,19 @@ namespace MDIPaint
         private const float MAX_ZOOM = 8.0f;
 
         public string FilePath { get; private set; } = null;   // null = новый документ
-        public bool IsDirty { get; private set; } = false;     // был ли изменён рисунок        
-        public Bitmap Image => bitmap;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDirty { get;  set; } = false;     // был ли изменён рисунок        
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Bitmap Image
+        {
+            get => bitmap;
+            set
+            {
+                bitmap?.Dispose(); // освобождаем старую картинку
+                bitmap = value;
+                Invalidate(); // перерисовываем
+            }
+        }
 
         public DocumentForm()
         {
@@ -487,7 +498,7 @@ namespace MDIPaint
                     break;
             }
         }
-            
+
 
 
         private void DocumentForm_MouseUp(object sender, MouseEventArgs e)
@@ -502,7 +513,7 @@ namespace MDIPaint
             UpdateCursor(main.Tool);
             if (!isDrawing || !startImage.HasValue) return;
 
-            
+
 
             switch (main.Tool)
             {
@@ -552,7 +563,7 @@ namespace MDIPaint
                     break;
                 case Tools.Fill:
                     break;
-                case Tools.Text:                        
+                case Tools.Text:
                     break;
                 case Tools.Arrow:
                     using (var g = Graphics.FromImage(bitmap))
@@ -564,7 +575,7 @@ namespace MDIPaint
                     }
                     break;
             }
-            
+
             startImage = null;
             IsDirty = true;
             Invalidate();
@@ -640,7 +651,7 @@ namespace MDIPaint
                     }
 
                     // Можно дополнительно показывать "резиновую" линию до текущей цели (опционально)
-                     currentImage = target;   // если хочешь показывать предпросмотр до мыши
+                    currentImage = target;   // если хочешь показывать предпросмотр до мыши
                     break;
                 case Tools.Line:
                     Invalidate();
@@ -688,7 +699,7 @@ namespace MDIPaint
                 case Tools.Fill:
                 case Tools.Text:
                 case Tools.Arrow:
-                    if(isDrawing)
+                    if (isDrawing)
                     {
                         Invalidate();
                     }
@@ -807,7 +818,7 @@ namespace MDIPaint
                 var main = MdiParent as MainForm;
                 if (main == null) return;
 
-                Pen p = new Pen(MainForm.Color, MainForm.Width )
+                Pen p = new Pen(MainForm.Color, MainForm.Width)
                 {
                     DashStyle = DashStyle.Solid
                 };
@@ -853,8 +864,6 @@ namespace MDIPaint
             UpdateScrollbars();
             Invalidate();
         }
-
-
     }
 }
 

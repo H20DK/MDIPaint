@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MetadataExtractor" Version="2.9.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\PluginInterface\PluginInterface.csproj" />
   </ItemGroup>
 

@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="MDIPaint/MDIPaint.csproj" Id="ee97c8c6-8f9c-4aa9-ba70-5954ef14dd48" />
   <Project Path="PluginInterface/PluginInterface.csproj" Id="4dd4b3c7-a1dc-4c1b-baac-ec45f44efe76" />
+  <Project Path="ReverseTransform/ReverseTransform.csproj" Id="769cca2b-4b0d-436f-9b50-43522d663a70" />
   <Project Path="Transforms/Transforms.csproj" Id="a5c13195-c0b0-43a8-8ff2-a2e8254a60cc" />
 </Solution>

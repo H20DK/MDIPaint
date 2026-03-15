@@ -22,20 +22,28 @@ namespace Transforms
             }
         }
 
-        public void Transform(Bitmap image)
+        public void Transform(
+            PluginContext context,
+            IProgress<int>? progress = null,
+            IProgress<string>? status = null,
+            CancellationToken cancellationToken = default)
         {
+            Bitmap image = context.Image;
             Bitmap result = new Bitmap(image.Width, image.Height);
-            int filterSize = 3; // Размер окна фильтра 3x3
-            int radius = filterSize / 2;
-
-            for (int x = 0; x < image.Width; x++)
+            int filterSize = 20;
+            int radius = 10;            
+            for (int y = 0; y < image.Height; y++)
             {
-                for (int y = 0; y < image.Height; y++)
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    status?.Report("Операция отменена пользователем");
+                    return; // Просто выходим из метода, без исключения
+                }
+                for (int x = 0; x < image.Width; x++)
                 {
                     List<int> rValues = new List<int>();
                     List<int> gValues = new List<int>();
                     List<int> bValues = new List<int>();
-
                     // Собираем значения пикселей в окне
                     for (int fx = -radius; fx <= radius; fx++)
                     {
@@ -65,6 +73,9 @@ namespace Transforms
 
                     result.SetPixel(x, y, medianColor);
                 }
+                int percent = (int)((double)(y + 1) / image.Height * 100);
+                progress?.Report(percent);
+                status?.Report($"Обработано строк: {y + 1} / {image.Height}");
             }
 
             // Копируем результат обратно в исходное изображение
@@ -72,6 +83,7 @@ namespace Transforms
             {
                 g.DrawImage(result, 0, 0);
             }
+            progress?.Report(100);
         }
     }
 }
